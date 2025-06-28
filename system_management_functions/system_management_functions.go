@@ -50,3 +50,31 @@ func Choco_install(package_name string) error {
 
 	return nil
 }
+
+// Winget_install installs the specified package using winget with standard flags.
+// Example: Winget_install("Visual Studio Code", "Microsoft.VisualStudioCode")
+func Winget_install(package_name string, package_id string) error {
+	log.Printf("🚀 Starting installation of %s via winget...", package_name)
+
+	args := []string{
+		"install",
+		"-e",
+		"--id", package_id,
+		"--scope", "machine",
+		"--silent",
+		"--accept-package-agreements",
+		"--accept-source-agreements",
+	}
+
+	cmd := exec.Command("winget", args...)
+	cmd.Stdout = log.Writer()
+	cmd.Stderr = log.Writer()
+
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("❌ Failed to install %s via winget: %w", package_name, err)
+	}
+
+	log.Printf("✅ %s installed successfully via winget.", package_name)
+	return nil
+}
