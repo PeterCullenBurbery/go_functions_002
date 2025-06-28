@@ -29,18 +29,21 @@ func Choco_install(package_name string) error {
 	install_cmd.Stderr = log.Writer()
 
 	if err := install_cmd.Run(); err != nil {
-		return fmt.Errorf("❌ Failed to install %s: %w", package_name, err)
+		log.Printf("⚠️ Install command failed or exited with warning: %v", err)
+		// Continue to verification anyway
 	}
 
-	// Verify installation
-	verify_cmd := exec.Command(choco_path, "list", "--local-only")
+	// Verify installation (specific package)
+	verify_cmd := exec.Command(choco_path, "list", "--local-only", package_name)
 	output, err := verify_cmd.CombinedOutput()
-	if err != nil {
+	output_str := string(output)
+
+	if err != nil && !strings.Contains(output_str, package_name) {
 		return fmt.Errorf("⚠️ Could not verify installation of %s: %w", package_name, err)
 	}
 
-	if strings.Contains(string(output), package_name) {
-		log.Printf("✅ %s installed successfully.", package_name)
+	if strings.Contains(output_str, package_name) {
+		log.Printf("✅ %s installed successfully or already present.", package_name)
 	} else {
 		log.Printf("⚠️ Install command ran, but %s may not be fully installed.", package_name)
 	}
