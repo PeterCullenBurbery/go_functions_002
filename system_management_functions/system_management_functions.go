@@ -78,3 +78,24 @@ func Winget_install(package_name string, package_id string) error {
 	log.Printf("✅ %s installed successfully via winget.", package_name)
 	return nil
 }
+
+// Install_choco installs Chocolatey using the official PowerShell script.
+// It takes no arguments and logs output to the standard logger.
+func Install_choco() error {
+	log.Println("📦 Starting Chocolatey installation...")
+
+	powershellCommand := `Set-ExecutionPolicy Bypass -Scope Process -Force; ` +
+		`[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ` +
+		`iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))`
+
+	cmd := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", powershellCommand)
+	cmd.Stdout = log.Writer()
+	cmd.Stderr = log.Writer()
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("❌ Chocolatey installation failed: %w", err)
+	}
+
+	log.Println("✅ Chocolatey installed successfully.")
+	return nil
+}
