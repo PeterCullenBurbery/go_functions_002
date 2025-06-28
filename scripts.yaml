@@ -1,0 +1,509 @@
+install:
+  install with winget:
+    Powershell 7: |
+      function Install-PowerShell-7 {
+          [CmdletBinding()]
+          param ()
+
+          Write-Host "🚀 Starting installation of PowerShell 7..."
+
+          $arguments = @(
+              "install"
+              "--id", "Microsoft.PowerShell"
+              "--source", "winget"
+              "--scope", "machine"
+              "--silent"
+              "--accept-package-agreements"
+              "--accept-source-agreements"
+          )
+
+          try {
+              Start-Process -FilePath "winget" -ArgumentList $arguments -Wait -NoNewWindow
+              Write-Host "✅ PowerShell 7 installed successfully."
+          } catch {
+              Write-Error "❌ Failed to install PowerShell 7. Error: $_"
+          }
+      }
+    VS code: |
+      function Install-VSCode {
+          [CmdletBinding()]
+          param ()
+
+          Write-Host "🚀 Starting installation of Visual Studio Code..."
+
+          $arguments = @(
+              "install"
+              "-e"
+              "--id", "Microsoft.VisualStudioCode"
+              "--scope", "machine"
+              "--silent"
+              "--accept-package-agreements"
+              "--accept-source-agreements"
+          )
+
+          try {
+              Start-Process -FilePath "winget" -ArgumentList $arguments -Wait -NoNewWindow
+              Write-Host "✅ Visual Studio Code installed successfully."
+          } catch {
+              Write-Error "❌ Failed to install Visual Studio Code. Error: $_"
+          }
+      }
+    7zip: |
+      function Install-7Zip {
+          [CmdletBinding()]
+          param ()
+
+          Write-Host "🚀 Starting installation of 7-Zip..."
+
+          $arguments = @(
+              "install"
+              "-e"
+              "--id", "7zip.7zip"
+              "--scope", "machine"
+              "--silent"
+              "--accept-package-agreements"
+              "--accept-source-agreements"
+          )
+
+          try {
+              Start-Process -FilePath "winget" -ArgumentList $arguments -Wait -NoNewWindow
+              Write-Host "✅ 7-Zip installed successfully."
+          } catch {
+              Write-Error "❌ Failed to install 7-Zip. Error: $_"
+          }
+      }
+    voidtools everything: |
+      function Install-Voidtools-Everything {
+          [CmdletBinding()]
+          param ()
+
+          Write-Host "🚀 Starting installation of Voidtools Everything..."
+
+          $arguments = @(
+              "install"
+              "-e"
+              "--id", "voidtools.Everything"
+              "--scope", "machine"
+              "--silent"
+              "--accept-package-agreements"
+              "--accept-source-agreements"
+          )
+
+          try {
+              Start-Process -FilePath "winget" -ArgumentList $arguments -Wait -NoNewWindow
+              Write-Host "✅ Voidtools Everything installed successfully."
+          } catch {
+              Write-Error "❌ Failed to install Voidtools Everything. Error: $_"
+          }
+      }
+    WinSCP: |
+      function Install-WinSCP {
+          [CmdletBinding()]
+          param ()
+
+          Write-Host "🚀 Starting installation of WinSCP..."
+
+          $arguments = @(
+              "install"
+              "-e"
+              "--id", "WinSCP.WinSCP"
+              "--scope", "machine"
+              "--silent"
+              "--accept-package-agreements"
+              "--accept-source-agreements"
+          )
+
+          try {
+              Start-Process -FilePath "winget" -ArgumentList $arguments -Wait -NoNewWindow
+              Write-Host "✅ WinSCP installed successfully."
+          } catch {
+              Write-Error "❌ Failed to install WinSCP. Error: $_"
+          }
+      }
+  install with choco:
+    MobaXTerm: |
+      function Install-MobaXterm {
+
+          [CmdletBinding()]
+          param ()
+
+          Write-Host "🚀 Starting installation of MobaXterm..."
+
+          # Try to resolve choco path
+          $chocoPath = Get-Command choco -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+
+          if (-not $chocoPath) {
+              $defaultChoco = "C:\ProgramData\chocolatey\bin\choco.exe"
+              if (Test-Path $defaultChoco) {
+                  $chocoPath = $defaultChoco
+              } else {
+                  Write-Error "❌ Chocolatey not found. Please install Chocolatey first."
+                  return
+              }
+          }
+
+          $arguments = @("install", "mobaxterm", "--yes")
+
+          try {
+              Start-Process -FilePath $chocoPath -ArgumentList $arguments -Wait -NoNewWindow
+
+              # Confirm installation
+              $isInstalled = & $chocoPath list --local-only | Select-String -Pattern '^mobaxterm'
+
+              if ($isInstalled) {
+                  Write-Host "✅ MobaXterm installed successfully."
+              } else {
+                  Write-Warning "⚠️ MobaXterm install completed, but it may not be installed correctly."
+              }
+
+          } catch {
+              Write-Error "❌ Failed to install MobaXterm. Error: $_"
+          }
+      }
+    Go: |
+      function Install-Go {
+
+          [CmdletBinding()]
+          param ()
+
+          Write-Host "🚀 Starting installation of Go..."
+
+          # Resolve choco path
+          $chocoPath = Get-Command choco -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+
+          if (-not $chocoPath) {
+              $defaultChoco = "C:\ProgramData\chocolatey\bin\choco.exe"
+              if (Test-Path $defaultChoco) {
+                  $chocoPath = $defaultChoco
+              } else {
+                  Write-Error "❌ Chocolatey not found. Please install Chocolatey first."
+                  return
+              }
+          }
+
+          $arguments = @("install", "golang", "--yes")
+
+          try {
+              Start-Process -FilePath $chocoPath -ArgumentList $arguments -Wait -NoNewWindow
+
+              # Verify installation
+              $isInstalled = & $chocoPath list --local-only | Select-String -Pattern '^golang'
+
+              if ($isInstalled) {
+                  Write-Host "✅ Go installed successfully."
+              } else {
+                  Write-Warning "⚠️ Installation completed, but Go may not be fully installed."
+              }
+
+          } catch {
+              Write-Error "❌ Failed to install Go. Error: $_"
+          }
+      }
+    Notepad++: |
+      function Install-NotepadPP {
+
+          [CmdletBinding()]
+          param ()
+
+          Write-Host "🚀 Starting installation of Notepad++..."
+
+          # Resolve Chocolatey path
+          $chocoPath = Get-Command choco -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+
+          if (-not $chocoPath) {
+              $defaultChoco = "C:\ProgramData\chocolatey\bin\choco.exe"
+              if (Test-Path $defaultChoco) {
+                  $chocoPath = $defaultChoco
+              } else {
+                  Write-Error "❌ Chocolatey not found. Please install Chocolatey first."
+                  return
+              }
+          }
+
+          $arguments = @("install", "notepadplusplus", "--yes")
+
+          try {
+              Start-Process -FilePath $chocoPath -ArgumentList $arguments -Wait -NoNewWindow
+
+              # Verify installation
+              $isInstalled = & $chocoPath list --local-only | Select-String -Pattern '^notepadplusplus'
+
+              if ($isInstalled) {
+                  Write-Host "✅ Notepad++ installed successfully."
+              } else {
+                  Write-Warning "⚠️ Install command ran, but Notepad++ may not be fully installed."
+              }
+
+          } catch {
+              Write-Error "❌ Failed to install Notepad++. Error: $_"
+          }
+      }
+    SQLite Browser: |
+      function Install-SQLiteBrowser {
+
+          [CmdletBinding()]
+          param ()
+
+          Write-Host "🚀 Starting installation of DB Browser for SQLite..."
+
+          # Resolve Chocolatey path
+          $chocoPath = Get-Command choco -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+
+          if (-not $chocoPath) {
+              $defaultChoco = "C:\ProgramData\chocolatey\bin\choco.exe"
+              if (Test-Path $defaultChoco) {
+                  $chocoPath = $defaultChoco
+              } else {
+                  Write-Error "❌ Chocolatey not found. Please install Chocolatey first."
+                  return
+              }
+          }
+
+          $arguments = @("install", "sqlitebrowser", "--yes")
+
+          try {
+              Start-Process -FilePath $chocoPath -ArgumentList $arguments -Wait -NoNewWindow
+
+              # Verify installation
+              $isInstalled = & $chocoPath list --local-only | Select-String -Pattern '^sqlitebrowser'
+
+              if ($isInstalled) {
+                  Write-Host "✅ DB Browser for SQLite installed successfully."
+              } else {
+                  Write-Warning "⚠️ Install completed, but DB Browser for SQLite may not be fully installed."
+              }
+
+          } catch {
+              Write-Error "❌ Failed to install DB Browser for SQLite. Error: $_"
+          }
+      }
+    Java: |
+      function Install-Java {
+          [CmdletBinding()]
+          param (
+              [string]$PackageName = "temurin21"
+          )
+
+          Write-Host "🚀 Starting installation of Java package: $PackageName..."
+
+          # Resolve Chocolatey path
+          $chocoPath = Get-Command choco -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+          if (-not $chocoPath) {
+              $defaultChoco = "C:\ProgramData\chocolatey\bin\choco.exe"
+              if (Test-Path $defaultChoco) {
+                  $chocoPath = $defaultChoco
+              } else {
+                  Write-Error "❌ Chocolatey not found. Please install Chocolatey first."
+                  return
+              }
+          }
+
+          $arguments = @("install", $PackageName, "--yes")
+
+          try {
+              Start-Process -FilePath $chocoPath -ArgumentList $arguments -Wait -NoNewWindow
+
+              # Confirm installation (FIXED)
+              $escapedName = [regex]::Escape($PackageName)
+              $isInstalled = & $chocoPath list --local-only | Select-String -Pattern ("^" + $escapedName)
+              if ($isInstalled) {
+                  Write-Host "✅ Java ($PackageName) installed successfully."
+              } else {
+                  Write-Warning "⚠️ Install completed, but $PackageName may not be fully installed."
+              }
+
+              # Set JAVA_HOME
+              $javaHomePath = $null
+
+              if ($PackageName -ieq "temurin21") {
+                  $javaHomePath = "C:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot"
+              } else {
+                  $jdkDir = Get-ChildItem "C:\Program Files\Eclipse Adoptium\" -Directory |
+                            Where-Object { $_.Name -like "jdk*" } |
+                            Sort-Object LastWriteTime -Descending |
+                            Select-Object -First 1
+                  if ($jdkDir) {
+                      $javaHomePath = $jdkDir.FullName
+                  }
+              }
+
+              if ($javaHomePath -and (Test-Path $javaHomePath)) {
+                  [Environment]::SetEnvironmentVariable("JAVA_HOME", $javaHomePath, [System.EnvironmentVariableTarget]::Machine)
+                  Write-Host "🌱 JAVA_HOME auto-set to: $javaHomePath"
+              } else {
+                  Write-Warning "⚠️ Could not determine JAVA_HOME path. You may need to set it manually."
+              }
+
+          } catch {
+              Write-Error "❌ Failed to install Java ($PackageName). Error: $_"
+          }
+      }
+  install with msiexec or Start-Process:
+    Cherry tree: |
+      function Install-CherryTree {
+          [CmdletBinding()]
+          param (
+              [Parameter(Mandatory = $true)]
+              [string]$log,
+
+              [Parameter(Mandatory = $true)]
+              [string]$installPath
+          )
+
+          # Logging helper
+          function Write-Log {
+              param ([string]$message)
+              $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+              "$timestamp`t$message" | Out-File -FilePath $log -Append -Encoding UTF8
+          }
+
+          Write-Host "🚀 Starting CherryTree installation..."
+          Write-Host "📝 Log path: $log"
+          Write-Host "📁 Install path: $installPath"
+
+          # Ensure directories exist
+          $logDir = Split-Path $log -Parent
+          if (-not (Test-Path $logDir)) {
+              New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+          }
+
+          $installDirParent = Split-Path $installPath -Parent
+          if (-not (Test-Path $installDirParent)) {
+              New-Item -ItemType Directory -Path $installDirParent -Force | Out-Null
+          }
+
+          # Use dynamic path to installer
+          $installerName = "cherrytree_1.5.0.0_win64_setup.exe"
+          $installer = Join-Path $installPath $installerName
+          if (-not (Test-Path $installer)) {
+              Write-Log "❌ Installer not found at $installer"
+              Write-Error "❌ Installer not found at $installer"
+              return
+          }
+
+          # Install arguments
+          $arguments = @(
+              "/VERYSILENT"
+              "/SUPPRESSMSGBOXES"
+              "/NORESTART"
+              "/SP-"
+              "/DIR=$installPath"
+              "/LOG=$log"
+          )
+
+          $start = Get-Date
+          Write-Log "🚀 Install started"
+          Write-Host "⏱️ Start: $start"
+
+          try {
+              Start-Process -FilePath $installer -ArgumentList $arguments -Wait -NoNewWindow
+
+              $end = Get-Date
+              $duration = $end - $start
+
+              Write-Log "✅ Install completed"
+              Write-Log "⏱️ Start: $start"
+              Write-Log "✅ End:   $end"
+              Write-Log "🧮 Duration: $($duration.ToString())"
+
+              Write-Host "✅ End:   $end"
+              Write-Host "🧮 Duration: $($duration.ToString())"
+          } catch {
+              $end = Get-Date
+              $duration = $end - $start
+
+              Write-Log "❌ Install failed: $_"
+              Write-Log "⏱️ Start: $start"
+              Write-Log "❌ End:   $end"
+              Write-Log "🧮 Duration: $($duration.ToString())"
+
+              Write-Error "❌ Installation failed"
+              Write-Host "⏱️ Start: $start"
+              Write-Host "❌ End:   $end"
+              Write-Host "🧮 Duration: $($duration.ToString())"
+          }
+      }
+    Miniconda: |
+      function Install-Miniconda {
+
+          [CmdletBinding()]
+          param (
+              [Parameter(Mandatory = $true)]
+              [string]$InstallerPath
+          )
+
+          # Define installation paths
+          $installDir = "C:\ProgramData\Miniconda3"
+          $condaExe = Join-Path $installDir "Scripts\conda.exe"
+          $pythonExe = Join-Path $installDir "python.exe"
+
+          # Check if installer exists
+          if (-not (Test-Path -Path $InstallerPath)) {
+              Write-Error "❌ Installer not found at: $InstallerPath"
+              return
+          }
+
+          Write-Host "📦 Installing Miniconda from: $InstallerPath"
+
+          # Define install arguments
+          $arguments = @(
+              "/S",                                # Silent install
+              "/InstallationType=AllUsers",        # System-wide
+              "/RegisterPython=1",                 # Set as system Python
+              "/D=$installDir"                     # Install location (must be last)
+          )
+
+          try {
+              # Run installer
+              Start-Process -FilePath $InstallerPath -ArgumentList $arguments -Wait -NoNewWindow
+              Write-Host "✅ Miniconda installed successfully."
+
+              # --- Verification ---
+              Write-Host "`n✅ Miniconda installed to: $installDir"
+
+              if (Test-Path $pythonExe) {
+                  Write-Host "🐍 Python version:"
+                  & $pythonExe --version
+              } else {
+                  Write-Warning "⚠️ Python not found at expected path: $pythonExe"
+              }
+
+              if (Test-Path $condaExe) {
+                  Write-Host "📦 Conda version:"
+                  & $condaExe --version
+
+                  # Clear Conda cache
+                  & $condaExe clean --all --yes
+                  Write-Host "🧹 Conda cache cleaned."
+              } else {
+                  Write-Warning "⚠️ Conda not found at expected path: $condaExe"
+              }
+
+          } catch {
+              Write-Error "❌ Installation failed: $_"
+          }
+      }
+  install with miscellaneous (neither winget nor choco nor Start-Process nor msiexec):
+    choco: |
+      function Install-Choco {
+          [CmdletBinding()]
+          param ()
+
+          Write-Host "🚀 Starting installation of Chocolatey..."
+
+          $installScript = 'https://community.chocolatey.org/install.ps1'
+
+          try {
+              Set-ExecutionPolicy Bypass -Scope Process -Force
+
+              # Secure protocol
+              [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+
+              # Run install script
+              iex ((New-Object System.Net.WebClient).DownloadString($installScript))
+
+              Write-Host "✅ Chocolatey installed successfully."
+          } catch {
+              Write-Error "❌ Failed to install Chocolatey. Error: $_"
+          }
+      }
