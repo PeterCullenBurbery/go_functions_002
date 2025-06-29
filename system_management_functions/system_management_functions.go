@@ -94,3 +94,20 @@ func Install_choco() error {
 	log.Println("✅ Chocolatey installed successfully.")
 	return nil
 }
+
+// Is_Choco_installed checks if Chocolatey is installed.
+// It returns true if choco.exe is found in PATH or at the default location.
+func Is_Choco_installed() bool {
+	// First try to resolve choco.exe from PATH
+	if _, err := exec.LookPath("choco"); err == nil {
+		return true
+	}
+
+	// Fallback to default Chocolatey path
+	default_choco_path := `C:\ProgramData\chocolatey\bin\choco.exe`
+	if _, err := os.Stat(default_choco_path); err == nil {
+		return true
+	}
+
+	return false
+}
