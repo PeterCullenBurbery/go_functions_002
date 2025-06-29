@@ -9,6 +9,57 @@ import (
 	"strings"
 )
 
+// Install_choco installs Chocolatey using the official PowerShell script.
+// It takes no arguments and logs output to the standard logger.
+// You could have Install_Choco check if choco is installed before installing. Then you could just call Install_Choco, and it would handle the details of whether Choco was installed or not.
+// Install_choco installs Chocolatey if it is not already installed.
+// It logs all steps to the standard logger.
+func Install_choco() error {
+	if Is_Choco_installed() {
+		log.Println("✅ Chocolatey is already installed. Skipping installation.")
+		return nil
+	}
+
+	log.Println("📦 Chocolatey not found. Starting installation...")
+
+	powershellCommand := `Set-ExecutionPolicy Bypass -Scope Process -Force; ` +
+		`[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ` +
+		`iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))`
+
+	cmd := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", powershellCommand)
+	cmd.Stdout = log.Writer()
+	cmd.Stderr = log.Writer()
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("❌ Chocolatey installation failed: %w", err)
+	}
+
+	// Recheck to confirm installation succeeded
+	if !Is_Choco_installed() {
+		return fmt.Errorf("❌ Chocolatey installation script ran, but choco.exe was not found afterward")
+	}
+
+	log.Println("✅ Chocolatey installed successfully.")
+	return nil
+}
+
+// Is_Choco_installed checks if Chocolatey is installed.
+// It returns true if choco.exe is found in PATH or at the default location.
+func Is_Choco_installed() bool {
+	// First try to resolve choco.exe from PATH
+	if _, err := exec.LookPath("choco"); err == nil {
+		return true
+	}
+
+	// Fallback to default Chocolatey path
+	default_choco_path := `C:\ProgramData\chocolatey\bin\choco.exe`
+	if _, err := os.Stat(default_choco_path); err == nil {
+		return true
+	}
+
+	return false
+}
+
 // Choco_install installs the given Chocolatey package and checks if it was installed successfully.
 func Choco_install(package_name string) error {
 	log.Printf("🚀 Starting installation of %s via Chocolatey...", package_name)
@@ -81,44 +132,6 @@ func Winget_install(package_name string, package_id string) error {
 
 	log.Printf("✅ %s installed successfully via winget.", package_name)
 	return nil
-}
-
-// Install_choco installs Chocolatey using the official PowerShell script.
-// It takes no arguments and logs output to the standard logger.
-func Install_choco() error {
-	log.Println("📦 Starting Chocolatey installation...")
-
-	powershellCommand := `Set-ExecutionPolicy Bypass -Scope Process -Force; ` +
-		`[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ` +
-		`iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))`
-
-	cmd := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", powershellCommand)
-	cmd.Stdout = log.Writer()
-	cmd.Stderr = log.Writer()
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("❌ Chocolatey installation failed: %w", err)
-	}
-
-	log.Println("✅ Chocolatey installed successfully.")
-	return nil
-}
-
-// Is_Choco_installed checks if Chocolatey is installed.
-// It returns true if choco.exe is found in PATH or at the default location.
-func Is_Choco_installed() bool {
-	// First try to resolve choco.exe from PATH
-	if _, err := exec.LookPath("choco"); err == nil {
-		return true
-	}
-
-	// Fallback to default Chocolatey path
-	default_choco_path := `C:\ProgramData\chocolatey\bin\choco.exe`
-	if _, err := os.Stat(default_choco_path); err == nil {
-		return true
-	}
-
-	return false
 }
 
 // Is_Java_installed checks if both java.exe and javac.exe are available in PATH,
