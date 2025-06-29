@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -118,4 +119,54 @@ func Is_Choco_installed() bool {
 	}
 
 	return false
+}
+
+// Is_Java_installed checks if both java.exe and javac.exe are available in PATH,
+// or in the default Eclipse Adoptium installation directory.
+func Is_Java_installed() bool {
+	// Check PATH using exec.LookPath
+	if _, err := exec.LookPath("java"); err == nil {
+		if _, err := exec.LookPath("javac"); err == nil {
+			return true
+		}
+	}
+
+	// Fallback: Check default Eclipse Adoptium JDK location
+	base_path := `C:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot\bin`
+	java_fallback := filepath.Join(base_path, "java.exe")
+	javac_fallback := filepath.Join(base_path, "javac.exe")
+
+	java_exists := fileExists(java_fallback)
+	javac_exists := fileExists(javac_fallback)
+
+	return java_exists && javac_exists
+}
+
+// fileExists checks if a file exists and is not a directory.
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return !info.IsDir()
+}
+
+// Install_Java ensures Java is installed by checking Is_Java_installed().
+// If not found, it installs the temurin21 JDK via Chocolatey.
+func Install_Java() error {
+	log.Println("📦 Checking if Java is already installed...")
+
+	if Is_Java_installed() {
+		log.Println("✅ Java is already installed. Skipping installation.")
+		return nil
+	}
+
+	log.Println("❌ Java not found. Proceeding with installation via Chocolatey...")
+
+	if err := Choco_install("temurin21"); err != nil {
+		return fmt.Errorf("❌ Failed to install temurin21 JDK: %w", err)
+	}
+
+	log.Println("✅ temurin21 JDK installation complete.")
+	return nil
 }
