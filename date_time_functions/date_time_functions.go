@@ -39,7 +39,7 @@ func Date_time_stamp() (string, error) {
 		java_fallback := filepath.Join(fallback_base, "java.exe")
 		javac_fallback := filepath.Join(fallback_base, "javac.exe")
 
-		if system_management_functions.FileExists(java_fallback) && system_management_functions.FileExists(javac_fallback) {
+		if system_management_functions.File_exists(java_fallback) && system_management_functions.File_exists(javac_fallback) {
 			java_cmd = java_fallback
 			javac_cmd = javac_fallback
 		} else {

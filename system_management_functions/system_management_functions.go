@@ -136,14 +136,14 @@ func Is_Java_installed() bool {
 	java_fallback := filepath.Join(base_path, "java.exe")
 	javac_fallback := filepath.Join(base_path, "javac.exe")
 
-	java_exists := fileExists(java_fallback)
-	javac_exists := fileExists(javac_fallback)
+	java_exists := File_exists(java_fallback)
+	javac_exists := File_exists(javac_fallback)
 
 	return java_exists && javac_exists
 }
 
-// fileExists checks if a file exists and is not a directory.
-func fileExists(path string) bool {
+// File_exists checks if a file exists and is not a directory.
+func File_exists(path string) bool {
 	info, err := os.Stat(path)
 	if err != nil {
 		return false
