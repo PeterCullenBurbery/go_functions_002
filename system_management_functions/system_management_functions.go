@@ -17,7 +17,6 @@ func Choco_install(package_name string) error {
 	if err != nil {
 		// Fallback to default Chocolatey path
 		choco_path = `C:\ProgramData\chocolatey\bin\choco.exe`
-
 		if _, statErr := os.Stat(choco_path); os.IsNotExist(statErr) {
 			return fmt.Errorf("❌ Chocolatey not found at %s. Please install Chocolatey first", choco_path)
 		}
@@ -34,22 +33,17 @@ func Choco_install(package_name string) error {
 		// Continue to verification anyway
 	}
 
-	// Verify installation (specific package)
-	verify_cmd := exec.Command(choco_path, "list", "--local-only", package_name)
-	output, err := verify_cmd.CombinedOutput()
-	output_str := string(output)
+	// Verify installation (new method: --limit-output --exact <name>)
+	verify_cmd := exec.Command(choco_path, "list", "--limit-output", "--exact", package_name)
+	output, _ := verify_cmd.CombinedOutput()
+	output_str := strings.TrimSpace(string(output))
 
-	if err != nil && !strings.Contains(output_str, package_name) {
-		return fmt.Errorf("⚠️ Could not verify installation of %s: %w", package_name, err)
-	}
-
-	if strings.Contains(output_str, package_name) {
+	if strings.HasPrefix(strings.ToLower(output_str), strings.ToLower(package_name)+"|") {
 		log.Printf("✅ %s installed successfully or already present.", package_name)
-	} else {
-		log.Printf("⚠️ Install command ran, but %s may not be fully installed.", package_name)
+		return nil
 	}
 
-	return nil
+	return fmt.Errorf("⚠️ Could not verify installation of %s. Raw output:\n%s", package_name, output_str)
 }
 
 // Winget_install installs the specified package using winget with standard flags.
