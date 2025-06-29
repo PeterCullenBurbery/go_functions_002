@@ -29,14 +29,22 @@ func Date_time_stamp() (string, error) {
 		}
 	}
 
-	// Resolve java and javac after (possibly) installing Java
-	java_cmd, err := exec.LookPath("java")
-	if err != nil {
-		return "", fmt.Errorf("❌ 'java' not found in PATH after installation")
-	}
-	javac_cmd, err := exec.LookPath("javac")
-	if err != nil {
-		return "", fmt.Errorf("❌ 'javac' not found in PATH after installation")
+	// Try to find java and javac from PATH
+	java_cmd, err_java := exec.LookPath("java")
+	javac_cmd, err_javac := exec.LookPath("javac")
+
+	// If either is missing, fallback to known Adoptium path
+	if err_java != nil || err_javac != nil {
+		fallback_base := `C:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot\bin`
+		java_fallback := filepath.Join(fallback_base, "java.exe")
+		javac_fallback := filepath.Join(fallback_base, "javac.exe")
+
+		if system_management_functions.FileExists(java_fallback) && system_management_functions.FileExists(javac_fallback) {
+			java_cmd = java_fallback
+			javac_cmd = javac_fallback
+		} else {
+			return "", fmt.Errorf("❌ Could not locate java or javac in PATH or fallback directory")
+		}
 	}
 
 	// Create temp directory for Java source and class files
