@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/PeterCullenBurbery/go_functions_002/system_management_functions"
 )
 
 // Format_now returns the current time formatted as "2006-01-02 15:04:05"
@@ -18,29 +20,26 @@ func Format_now() string {
 }
 
 // Date_time_stamp returns a timestamp string formatted via a temporary Java program.
-// It supports optional overrides for javac/java paths.
-func Date_time_stamp(args ...string) (string, error) {
-	var javac_cmd, java_cmd string
-
-	switch len(args) {
-	case 0:
-		// Default: look in PATH
-		var err error
-		javac_cmd, err = exec.LookPath("javac")
-		if err != nil {
-			return "", fmt.Errorf("❌ 'javac' not found in PATH. Please ensure JDK is installed")
+// It takes no arguments. Java will be installed via Chocolatey if needed.
+func Date_time_stamp() (string, error) {
+	// Ensure Java is installed
+	if !system_management_functions.Is_Java_installed() {
+		if err := system_management_functions.Install_Java(); err != nil {
+			return "", fmt.Errorf("❌ Java installation failed: %w", err)
 		}
-		java_cmd, err = exec.LookPath("java")
-		if err != nil {
-			return "", fmt.Errorf("❌ 'java' not found in PATH. Please ensure JRE is installed")
-		}
-	case 2:
-		javac_cmd = args[0]
-		java_cmd = args[1]
-	default:
-		return "", fmt.Errorf("❌ Date_time_stamp() expects 0 or 2 arguments (javac_path, java_path)")
 	}
 
+	// Resolve java and javac after (possibly) installing Java
+	java_cmd, err := exec.LookPath("java")
+	if err != nil {
+		return "", fmt.Errorf("❌ 'java' not found in PATH after installation")
+	}
+	javac_cmd, err := exec.LookPath("javac")
+	if err != nil {
+		return "", fmt.Errorf("❌ 'javac' not found in PATH after installation")
+	}
+
+	// Create temp directory for Java source and class files
 	temp_dir, err := os.MkdirTemp("", "date_time_stamp")
 	if err != nil {
 		return "", fmt.Errorf("❌ Failed to create temp directory: %w", err)
@@ -92,11 +91,12 @@ public class date_time_stamp {
 	var output_buffer bytes.Buffer
 	cmd_run.Stdout = &output_buffer
 	cmd_run.Stderr = &output_buffer
+
 	if err := cmd_run.Run(); err != nil {
 		return "", fmt.Errorf("❌ Failed to run Java class: %w\nOutput:\n%s", err, output_buffer.String())
 	}
 
-	// Trim any trailing newline or carriage return
+	// Trim output
 	return strings.TrimSpace(output_buffer.String()), nil
 }
 
