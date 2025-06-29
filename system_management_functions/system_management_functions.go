@@ -106,34 +106,6 @@ func Choco_install(package_name string) error {
 	return fmt.Errorf("⚠️ Could not verify installation of %s. Raw output:\n%s", package_name, output_str)
 }
 
-// Winget_install installs the specified package using winget with standard flags.
-// Example: Winget_install("Visual Studio Code", "Microsoft.VisualStudioCode")
-func Winget_install(package_name string, package_id string) error {
-	log.Printf("🚀 Starting installation of %s via winget...", package_name)
-
-	args := []string{
-		"install",
-		"-e",
-		"--id", package_id,
-		"--scope", "machine",
-		"--silent",
-		"--accept-package-agreements",
-		"--accept-source-agreements",
-	}
-
-	cmd := exec.Command("winget", args...)
-	cmd.Stdout = log.Writer()
-	cmd.Stderr = log.Writer()
-
-	err := cmd.Run()
-	if err != nil {
-		return fmt.Errorf("❌ Failed to install %s via winget: %w", package_name, err)
-	}
-
-	log.Printf("✅ %s installed successfully via winget.", package_name)
-	return nil
-}
-
 // Is_Java_installed checks if both java.exe and javac.exe are available in PATH,
 // or in the default Eclipse Adoptium installation directory.
 func Is_Java_installed() bool {
@@ -166,6 +138,9 @@ func File_exists(path string) bool {
 
 // Install_Java ensures Java is installed by checking Is_Java_installed().
 // If not found, it installs the temurin21 JDK via Chocolatey.
+// You could use Is java installed after choco_install(java).
+// Install_Java ensures Java is installed by checking Is_Java_installed().
+// If not found, it installs the temurin21 JDK via Chocolatey and verifies the result.
 func Install_Java() error {
 	log.Println("📦 Checking if Java is already installed...")
 
@@ -180,6 +155,39 @@ func Install_Java() error {
 		return fmt.Errorf("❌ Failed to install temurin21 JDK: %w", err)
 	}
 
-	log.Println("✅ temurin21 JDK installation complete.")
+	// Re-check after installation
+	if !Is_Java_installed() {
+		return fmt.Errorf("❌ temurin21 JDK was installed, but Java was still not detected")
+	}
+
+	log.Println("✅ temurin21 JDK installation complete and verified.")
+	return nil
+}
+
+// Winget_install installs the specified package using winget with standard flags.
+// Example: Winget_install("Visual Studio Code", "Microsoft.VisualStudioCode")
+func Winget_install(package_name string, package_id string) error {
+	log.Printf("🚀 Starting installation of %s via winget...", package_name)
+
+	args := []string{
+		"install",
+		"-e",
+		"--id", package_id,
+		"--scope", "machine",
+		"--silent",
+		"--accept-package-agreements",
+		"--accept-source-agreements",
+	}
+
+	cmd := exec.Command("winget", args...)
+	cmd.Stdout = log.Writer()
+	cmd.Stderr = log.Writer()
+
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("❌ Failed to install %s via winget: %w", package_name, err)
+	}
+
+	log.Printf("✅ %s installed successfully via winget.", package_name)
 	return nil
 }
