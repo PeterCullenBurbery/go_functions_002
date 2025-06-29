@@ -3,6 +3,7 @@ package system_management_functions
 import (
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -14,11 +15,11 @@ func Choco_install(package_name string) error {
 	// Try to resolve choco.exe
 	choco_path, err := exec.LookPath("choco")
 	if err != nil {
-		// Fallback to default path
+		// Fallback to default Chocolatey path
 		choco_path = `C:\ProgramData\chocolatey\bin\choco.exe`
-		check_cmd := exec.Command("cmd", "/c", "if exist \""+choco_path+"\" (exit 0) else (exit 1)")
-		if err := check_cmd.Run(); err != nil {
-			return fmt.Errorf("❌ Chocolatey not found. Please install Chocolatey first")
+
+		if _, statErr := os.Stat(choco_path); os.IsNotExist(statErr) {
+			return fmt.Errorf("❌ Chocolatey not found at %s. Please install Chocolatey first", choco_path)
 		}
 	}
 
