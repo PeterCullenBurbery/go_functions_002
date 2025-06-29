@@ -23,10 +23,8 @@ func Format_now() string {
 // It takes no arguments. Java will be installed via Chocolatey if needed.
 func Date_time_stamp() (string, error) {
 	// Ensure Java is installed
-	if !system_management_functions.Is_Java_installed() {
-		if err := system_management_functions.Install_Java(); err != nil {
-			return "", fmt.Errorf("❌ Java installation failed: %w", err)
-		}
+	if err := system_management_functions.Install_Java(); err != nil {
+		return "", fmt.Errorf("❌ Java installation failed: %w", err)
 	}
 
 	// Try to find java and javac from PATH
