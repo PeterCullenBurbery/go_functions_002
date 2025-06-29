@@ -12,13 +12,21 @@ import (
 func Choco_install(package_name string) error {
 	log.Printf("🚀 Starting installation of %s via Chocolatey...", package_name)
 
+	// Check if Chocolatey is installed
+	if !Is_Choco_installed() {
+		log.Println("🔍 Chocolatey not found. Attempting to install it...")
+		if err := Install_choco(); err != nil {
+			return fmt.Errorf("❌ Failed to install Chocolatey: %w", err)
+		}
+		log.Println("✅ Chocolatey installation complete. Proceeding with package installation...")
+	}
+
 	// Try to resolve choco.exe
 	choco_path, err := exec.LookPath("choco")
 	if err != nil {
-		// Fallback to default Chocolatey path
 		choco_path = `C:\ProgramData\chocolatey\bin\choco.exe`
 		if _, statErr := os.Stat(choco_path); os.IsNotExist(statErr) {
-			return fmt.Errorf("❌ Chocolatey not found at %s. Please install Chocolatey first", choco_path)
+			return fmt.Errorf("❌ Chocolatey not found at %s even after attempted installation", choco_path)
 		}
 	}
 
