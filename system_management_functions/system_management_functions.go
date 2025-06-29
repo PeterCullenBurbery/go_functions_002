@@ -64,16 +64,12 @@ func Is_Choco_installed() bool {
 func Choco_install(package_name string) error {
 	log.Printf("🚀 Starting installation of %s via Chocolatey...", package_name)
 
-	// Check if Chocolatey is installed
-	if !Is_Choco_installed() {
-		log.Println("🔍 Chocolatey not found. Attempting to install it...")
-		if err := Install_choco(); err != nil {
-			return fmt.Errorf("❌ Failed to install Chocolatey: %w", err)
-		}
-		log.Println("✅ Chocolatey installation complete. Proceeding with package installation...")
+	// Ensure Chocolatey is installed
+	if err := Install_choco(); err != nil {
+		return fmt.Errorf("❌ Failed to install or locate Chocolatey: %w", err)
 	}
 
-	// Try to resolve choco.exe
+	// Resolve choco.exe path
 	choco_path, err := exec.LookPath("choco")
 	if err != nil {
 		choco_path = `C:\ProgramData\chocolatey\bin\choco.exe`
@@ -82,7 +78,7 @@ func Choco_install(package_name string) error {
 		}
 	}
 
-	// Install the package
+	// Run installation
 	args := []string{"install", package_name, "--yes"}
 	install_cmd := exec.Command(choco_path, args...)
 	install_cmd.Stdout = log.Writer()
@@ -93,7 +89,7 @@ func Choco_install(package_name string) error {
 		// Continue to verification anyway
 	}
 
-	// Verify installation (new method: --limit-output --exact <name>)
+	// Verify installation (via choco list)
 	verify_cmd := exec.Command(choco_path, "list", "--limit-output", "--exact", package_name)
 	output, _ := verify_cmd.CombinedOutput()
 	output_str := strings.TrimSpace(string(output))
