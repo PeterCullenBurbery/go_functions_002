@@ -771,3 +771,67 @@ func Set_start_menu_to_center() error {
 	fmt.Println("🔁 Explorer restarted to apply Start menu alignment (center)")
 	return nil
 }
+
+// Show_file_extensions sets HideFileExt = 0 to make file extensions visible.
+// If restartExplorer is true, Explorer is restarted to apply the change immediately.
+func Show_file_extensions(restartExplorer bool) error {
+	keyPath := `Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced`
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open/create registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetDWordValue("HideFileExt", 0); err != nil {
+		return fmt.Errorf("❌ Failed to set HideFileExt = 0: %w", err)
+	}
+
+	fmt.Println("✅ File extensions will be visible (HideFileExt = 0)")
+
+	if restartExplorer {
+		if err := exec.Command("taskkill", "/f", "/im", "explorer.exe").Run(); err != nil {
+			return fmt.Errorf("❌ Failed to stop Explorer: %w", err)
+		}
+		if err := exec.Command("explorer.exe").Start(); err != nil {
+			return fmt.Errorf("❌ Failed to restart Explorer: %w", err)
+		}
+		fmt.Println("🔁 Explorer restarted to apply visibility of file extensions.")
+	} else {
+		fmt.Println("ℹ️ Explorer restart skipped.")
+	}
+
+	return nil
+}
+
+// Do_not_show_file_extensions sets HideFileExt = 1 to hide file extensions.
+// If restartExplorer is true, Explorer is restarted to apply the change immediately.
+func Do_not_show_file_extensions(restartExplorer bool) error {
+	keyPath := `Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced`
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open/create registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetDWordValue("HideFileExt", 1); err != nil {
+		return fmt.Errorf("❌ Failed to set HideFileExt = 1: %w", err)
+	}
+
+	fmt.Println("✅ File extensions will be hidden (HideFileExt = 1)")
+
+	if restartExplorer {
+		if err := exec.Command("taskkill", "/f", "/im", "explorer.exe").Run(); err != nil {
+			return fmt.Errorf("❌ Failed to stop Explorer: %w", err)
+		}
+		if err := exec.Command("explorer.exe").Start(); err != nil {
+			return fmt.Errorf("❌ Failed to restart Explorer: %w", err)
+		}
+		fmt.Println("🔁 Explorer restarted to apply hiding of file extensions.")
+	} else {
+		fmt.Println("ℹ️ Explorer restart skipped.")
+	}
+
+	return nil
+}
