@@ -537,3 +537,47 @@ func Extract_zip(src, dest string) error {
 
 	return nil
 }
+
+// Exclude_from_Microsoft_Windows_Defender excludes the given file or folder from Microsoft Defender.
+//
+// If a file is given, its parent folder is excluded instead.
+// This requires administrator privileges.
+//
+// Parameters:
+//   - path_to_exclude: Absolute path to a file or folder to exclude.
+//
+// Returns:
+//   - An error if exclusion fails; nil otherwise.
+func Exclude_from_Microsoft_Windows_Defender(path_to_exclude string) error {
+	// Resolve absolute path
+	absPath, err := filepath.Abs(path_to_exclude)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to resolve absolute path: %w", err)
+	}
+
+	// Stat to determine if it's a file or folder
+	info, err := os.Stat(absPath)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to stat path: %w", err)
+	}
+
+	// If it's a file, get parent directory
+	if !info.IsDir() {
+		absPath = filepath.Dir(absPath)
+	}
+
+	// Normalize (trim trailing slash)
+	normalizedPath := filepath.Clean(absPath)
+
+	// Build PowerShell command
+	cmd := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+		fmt.Sprintf(`Add-MpPreference -ExclusionPath "%s"`, normalizedPath))
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("❌ Failed to exclude from Defender: %w\nOutput: %s", err, string(output))
+	}
+
+	fmt.Printf("✅ Excluded from Microsoft Defender: %s\n", normalizedPath)
+	return nil
+}
