@@ -9,6 +9,10 @@ import (
 	"path/filepath"
 	"net/http"
 	"strings"
+	"syscall"
+	"unsafe"
+
+	"golang.org/x/sys/windows/registry"
 )
 
 // Install_choco installs Chocolatey using the official PowerShell script.
@@ -220,6 +224,87 @@ func Download_file(destination_path string, url string) error {
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return nil
+}
+// Add_to_path adds the given path to the top of the system PATH (HKLM) if not already present.
+// It broadcasts the environment change so apps like Explorer pick it up.
+func Add_to_path(path_to_add string) error {
+	// Resolve full absolute path
+	absPath, err := filepath.Abs(path_to_add)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to resolve absolute path: %w", err)
+	}
+
+	// If it's a file, get parent folder
+	info, err := os.Stat(absPath)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to stat path: %w", err)
+	}
+	if !info.IsDir() {
+		absPath = filepath.Dir(absPath)
+	}
+	normalizedPath := strings.TrimRight(absPath, `\`)
+
+	// Open registry key for system environment variables
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE,
+		`SYSTEM\CurrentControlSet\Control\Session Manager\Environment`,
+		registry.QUERY_VALUE|registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open system environment registry key: %w", err)
+	}
+	defer key.Close()
+
+	// Get current PATH
+	currentPath, _, err := key.GetStringValue("Path")
+	if err != nil {
+		return fmt.Errorf("❌ Failed to read PATH: %w", err)
+	}
+
+	// Normalize and check if already in PATH
+	entries := strings.Split(currentPath, ";")
+	for i := range entries {
+		entries[i] = strings.TrimRight(entries[i], `\`)
+	}
+	for _, entry := range entries {
+		if strings.EqualFold(entry, normalizedPath) {
+			fmt.Println("✅ Path already present in system PATH.")
+			return nil
+		}
+	}
+
+	// Prepend and set new PATH
+	newPath := normalizedPath + ";" + currentPath
+	if err := key.SetStringValue("Path", newPath); err != nil {
+		return fmt.Errorf("❌ Failed to update PATH in registry: %w", err)
+	}
+	fmt.Println("✅ Path added to the top of system PATH.")
+
+	// Broadcast environment change
+	const (
+		HWND_BROADCAST   = 0xffff
+		WM_SETTINGCHANGE = 0x001A
+		SMTO_ABORTIFHUNG = 0x0002
+	)
+
+	user32 := syscall.NewLazyDLL("user32.dll")
+	procSendMessageTimeout := user32.NewProc("SendMessageTimeoutW")
+
+	ret, _, _ := procSendMessageTimeout.Call(
+		uintptr(HWND_BROADCAST),
+		uintptr(WM_SETTINGCHANGE),
+		0,
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr("Environment"))),
+		uintptr(SMTO_ABORTIFHUNG),
+		5000,
+		uintptr(0),
+	)
+
+	if ret == 0 {
+		fmt.Println("⚠️ Environment change broadcast may have failed.")
+	} else {
+		fmt.Println("📢 Environment update broadcast sent.")
 	}
 
 	return nil
