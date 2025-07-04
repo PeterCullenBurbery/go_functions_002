@@ -17,6 +17,7 @@ import (
 	"github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 	"golang.org/x/sys/windows/registry"
+	yekazip "github.com/yeka/zip"
 )
 
 // Install_choco installs Chocolatey using the official PowerShell script.
@@ -579,5 +580,64 @@ func Exclude_from_Microsoft_Windows_Defender(path_to_exclude string) error {
 	}
 
 	fmt.Printf("✅ Excluded from Microsoft Defender: %s\n", normalizedPath)
+	return nil
+}
+
+// Extract_password_protected_zip extracts a password-protected ZIP archive using AES or ZipCrypto.
+//
+// Parameters:
+//   - src: full path to the .zip archive
+//   - dest: directory where the files should be extracted
+//   - password: the password used to decrypt the archive
+//
+// Returns:
+//   - error if extraction fails, otherwise nil
+func Extract_password_protected_zip(src, dest, password string) error {
+	reader, err := yekazip.OpenReader(src)
+	if err != nil {
+		return fmt.Errorf("❌ failed to open zip archive: %w", err)
+	}
+	defer reader.Close()
+
+	for _, file := range reader.File {
+		fpath := filepath.Join(dest, file.Name)
+
+		// Zip Slip protection
+		if !strings.HasPrefix(filepath.Clean(fpath), filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("❌ illegal file path in archive: %s", fpath)
+		}
+
+		// Directory
+		if file.FileInfo().IsDir() {
+			if err := os.MkdirAll(fpath, file.Mode()); err != nil {
+				return fmt.Errorf("❌ failed to create directory %s: %w", fpath, err)
+			}
+			continue
+		}
+
+		// Ensure parent directory exists
+		if err := os.MkdirAll(filepath.Dir(fpath), 0755); err != nil {
+			return fmt.Errorf("❌ failed to create parent directory: %w", err)
+		}
+
+		// Set password and open the file
+		file.SetPassword(password)
+		rc, err := file.Open()
+		if err != nil {
+			return fmt.Errorf("❌ failed to open encrypted file %s: %w", file.Name, err)
+		}
+		defer rc.Close()
+
+		outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+		if err != nil {
+			return fmt.Errorf("❌ failed to create file %s: %w", fpath, err)
+		}
+		defer outFile.Close()
+
+		if _, err := io.Copy(outFile, rc); err != nil {
+			return fmt.Errorf("❌ failed to write file %s: %w", fpath, err)
+		}
+	}
+
 	return nil
 }
