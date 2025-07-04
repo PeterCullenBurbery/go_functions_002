@@ -963,3 +963,67 @@ func Do_not_hide_search_box(restartExplorer bool) error {
 
 	return nil
 }
+
+// Seconds_in_taskbar enables seconds on the taskbar clock by setting ShowSecondsInSystemClock = 1.
+// If restartExplorer is true, Explorer will be restarted to apply the change.
+func Seconds_in_taskbar(restartExplorer bool) error {
+	keyPath := `Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced`
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open/create registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetDWordValue("ShowSecondsInSystemClock", 1); err != nil {
+		return fmt.Errorf("❌ Failed to set ShowSecondsInSystemClock = 1: %w", err)
+	}
+
+	fmt.Println("✅ Taskbar clock will display seconds (ShowSecondsInSystemClock = 1)")
+
+	if restartExplorer {
+		if err := exec.Command("taskkill", "/f", "/im", "explorer.exe").Run(); err != nil {
+			return fmt.Errorf("❌ Failed to stop Explorer: %w", err)
+		}
+		if err := exec.Command("explorer.exe").Start(); err != nil {
+			return fmt.Errorf("❌ Failed to restart Explorer: %w", err)
+		}
+		fmt.Println("🔁 Explorer restarted to apply the seconds display.")
+	} else {
+		fmt.Println("ℹ️ Explorer restart skipped.")
+	}
+
+	return nil
+}
+
+// Take_seconds_out_of_taskbar disables seconds on the taskbar clock by setting ShowSecondsInSystemClock = 0.
+// If restartExplorer is true, Explorer will be restarted to apply the change.
+func Take_seconds_out_of_taskbar(restartExplorer bool) error {
+	keyPath := `Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced`
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open/create registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetDWordValue("ShowSecondsInSystemClock", 0); err != nil {
+		return fmt.Errorf("❌ Failed to set ShowSecondsInSystemClock = 0: %w", err)
+	}
+
+	fmt.Println("✅ Taskbar clock will hide seconds (ShowSecondsInSystemClock = 0)")
+
+	if restartExplorer {
+		if err := exec.Command("taskkill", "/f", "/im", "explorer.exe").Run(); err != nil {
+			return fmt.Errorf("❌ Failed to stop Explorer: %w", err)
+		}
+		if err := exec.Command("explorer.exe").Start(); err != nil {
+			return fmt.Errorf("❌ Failed to restart Explorer: %w", err)
+		}
+		fmt.Println("🔁 Explorer restarted to apply the change.")
+	} else {
+		fmt.Println("ℹ️ Explorer restart skipped.")
+	}
+
+	return nil
+}
