@@ -641,3 +641,77 @@ func Extract_password_protected_zip(src, dest, password string) error {
 
 	return nil
 }
+
+// Set_dark_mode sets Windows to dark mode for both system and apps.
+// If restartExplorer is true, it restarts Explorer to apply the change.
+func Set_dark_mode(restartExplorer bool) error {
+	keyPath := `Software\Microsoft\Windows\CurrentVersion\Themes\Personalize`
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open/create registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetDWordValue("AppsUseLightTheme", 0); err != nil {
+		return fmt.Errorf("❌ Failed to set AppsUseLightTheme: %w", err)
+	}
+	if err := key.SetDWordValue("SystemUsesLightTheme", 0); err != nil {
+		return fmt.Errorf("❌ Failed to set SystemUsesLightTheme: %w", err)
+	}
+
+	fmt.Println("✅ Dark mode set: AppsUseLightTheme & SystemUsesLightTheme = 0")
+
+	if restartExplorer {
+		cmd := exec.Command("taskkill", "/f", "/im", "explorer.exe")
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("❌ Failed to restart Explorer: %w", err)
+		}
+		cmd = exec.Command("explorer.exe")
+		if err := cmd.Start(); err != nil {
+			return fmt.Errorf("❌ Failed to launch Explorer: %w", err)
+		}
+		fmt.Println("🔁 Explorer restarted to apply Dark Mode.")
+	} else {
+		fmt.Println("ℹ️ Explorer restart skipped.")
+	}
+
+	return nil
+}
+
+// Set_light_mode sets Windows to light mode for both system and apps.
+// If restartExplorer is true, it restarts Explorer to apply the change.
+func Set_light_mode(restartExplorer bool) error {
+	keyPath := `Software\Microsoft\Windows\CurrentVersion\Themes\Personalize`
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open/create registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetDWordValue("AppsUseLightTheme", 1); err != nil {
+		return fmt.Errorf("❌ Failed to set AppsUseLightTheme: %w", err)
+	}
+	if err := key.SetDWordValue("SystemUsesLightTheme", 1); err != nil {
+		return fmt.Errorf("❌ Failed to set SystemUsesLightTheme: %w", err)
+	}
+
+	fmt.Println("✅ Light mode set: AppsUseLightTheme & SystemUsesLightTheme = 1")
+
+	if restartExplorer {
+		cmd := exec.Command("taskkill", "/f", "/im", "explorer.exe")
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("❌ Failed to restart Explorer: %w", err)
+		}
+		cmd = exec.Command("explorer.exe")
+		if err := cmd.Start(); err != nil {
+			return fmt.Errorf("❌ Failed to launch Explorer: %w", err)
+		}
+		fmt.Println("🔁 Explorer restarted to apply Light Mode.")
+	} else {
+		fmt.Println("ℹ️ Explorer restart skipped.")
+	}
+
+	return nil
+}
