@@ -835,3 +835,67 @@ func Do_not_show_file_extensions(restartExplorer bool) error {
 
 	return nil
 }
+
+// Show_hidden_files sets Hidden = 1 to show hidden files in File Explorer.
+// If restartExplorer is true, Explorer will be restarted to apply the change immediately.
+func Show_hidden_files(restartExplorer bool) error {
+	keyPath := `Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced`
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open/create registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetDWordValue("Hidden", 1); err != nil {
+		return fmt.Errorf("❌ Failed to set Hidden = 1: %w", err)
+	}
+
+	fmt.Println("✅ Hidden files will be shown (Hidden = 1)")
+
+	if restartExplorer {
+		if err := exec.Command("taskkill", "/f", "/im", "explorer.exe").Run(); err != nil {
+			return fmt.Errorf("❌ Failed to stop Explorer: %w", err)
+		}
+		if err := exec.Command("explorer.exe").Start(); err != nil {
+			return fmt.Errorf("❌ Failed to restart Explorer: %w", err)
+		}
+		fmt.Println("🔁 Explorer restarted to apply hidden file visibility.")
+	} else {
+		fmt.Println("ℹ️ Explorer restart skipped.")
+	}
+
+	return nil
+}
+
+// Do_not_show_hidden_files sets Hidden = 2 to hide hidden files in File Explorer.
+// If restartExplorer is true, Explorer will be restarted to apply the change immediately.
+func Do_not_show_hidden_files(restartExplorer bool) error {
+	keyPath := `Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced`
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open/create registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetDWordValue("Hidden", 2); err != nil {
+		return fmt.Errorf("❌ Failed to set Hidden = 2: %w", err)
+	}
+
+	fmt.Println("✅ Hidden files will be hidden (Hidden = 2)")
+
+	if restartExplorer {
+		if err := exec.Command("taskkill", "/f", "/im", "explorer.exe").Run(); err != nil {
+			return fmt.Errorf("❌ Failed to stop Explorer: %w", err)
+		}
+		if err := exec.Command("explorer.exe").Start(); err != nil {
+			return fmt.Errorf("❌ Failed to restart Explorer: %w", err)
+		}
+		fmt.Println("🔁 Explorer restarted to apply hiding of hidden files.")
+	} else {
+		fmt.Println("ℹ️ Explorer restart skipped.")
+	}
+
+	return nil
+}
