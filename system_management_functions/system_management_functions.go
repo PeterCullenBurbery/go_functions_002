@@ -1127,3 +1127,103 @@ func Reset_short_date_pattern() error {
 	fmt.Println("📢 System broadcast sent to apply the setting.")
 	return nil
 }
+
+// Set_long_date_pattern sets the long date pattern to "yyyy-MM-dd-dddd"
+// and broadcasts the change to the system.
+func Set_long_date_pattern() error {
+	const (
+		keyPath      = `Control Panel\International`
+		valueName    = "sLongDate"
+		newPattern   = "yyyy-MM-dd-dddd"
+		broadcastMsg = "Intl"
+	)
+
+	// Write to registry
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetStringValue(valueName, newPattern); err != nil {
+		return fmt.Errorf("❌ Failed to set long date pattern: %w", err)
+	}
+
+	fmt.Printf("✅ Long date pattern set to '%s'.\n", newPattern)
+
+	// Broadcast setting change (inline SendMessageTimeout)
+	const (
+		HWND_BROADCAST   = 0xffff
+		WM_SETTINGCHANGE = 0x001A
+		SMTO_ABORTIFHUNG = 0x0002
+	)
+
+	user32 := syscall.NewLazyDLL("user32.dll")
+	sendMessageTimeout := user32.NewProc("SendMessageTimeoutW")
+
+	categoryPtr := syscall.StringToUTF16Ptr(broadcastMsg)
+	var result uintptr
+
+	_, _, _ = sendMessageTimeout.Call(
+		uintptr(HWND_BROADCAST),
+		uintptr(WM_SETTINGCHANGE),
+		0,
+		uintptr(unsafe.Pointer(categoryPtr)),
+		uintptr(SMTO_ABORTIFHUNG),
+		100,
+		uintptr(unsafe.Pointer(&result)),
+	)
+
+	fmt.Println("📢 System broadcast sent to apply the setting.")
+	return nil
+}
+
+// Reset_long_date_pattern resets the long date pattern to the default "dddd, MMMM d, yyyy"
+// and broadcasts the change to the system.
+func Reset_long_date_pattern() error {
+	const (
+		keyPath       = `Control Panel\International`
+		valueName     = "sLongDate"
+		defaultFormat = "dddd, MMMM d, yyyy"
+		broadcastMsg  = "Intl"
+	)
+
+	// Write to registry
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetStringValue(valueName, defaultFormat); err != nil {
+		return fmt.Errorf("❌ Failed to reset long date pattern: %w", err)
+	}
+
+	fmt.Printf("✅ Long date pattern reset to '%s'.\n", defaultFormat)
+
+	// Broadcast setting change (inline)
+	const (
+		HWND_BROADCAST   = 0xffff
+		WM_SETTINGCHANGE = 0x001A
+		SMTO_ABORTIFHUNG = 0x0002
+	)
+
+	user32 := syscall.NewLazyDLL("user32.dll")
+	sendMessageTimeout := user32.NewProc("SendMessageTimeoutW")
+
+	categoryPtr := syscall.StringToUTF16Ptr(broadcastMsg)
+	var result uintptr
+
+	_, _, _ = sendMessageTimeout.Call(
+		uintptr(HWND_BROADCAST),
+		uintptr(WM_SETTINGCHANGE),
+		0,
+		uintptr(unsafe.Pointer(categoryPtr)),
+		uintptr(SMTO_ABORTIFHUNG),
+		100,
+		uintptr(unsafe.Pointer(&result)),
+	)
+
+	fmt.Println("📢 System broadcast sent to apply the setting.")
+	return nil
+}
