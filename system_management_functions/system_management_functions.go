@@ -899,3 +899,67 @@ func Do_not_show_hidden_files(restartExplorer bool) error {
 
 	return nil
 }
+
+// Hide_search_box sets SearchboxTaskbarMode = 0 to hide the taskbar search box.
+// If restartExplorer is true, Explorer will be restarted to apply the change.
+func Hide_search_box(restartExplorer bool) error {
+	keyPath := `Software\Microsoft\Windows\CurrentVersion\Search`
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open/create registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetDWordValue("SearchboxTaskbarMode", 0); err != nil {
+		return fmt.Errorf("❌ Failed to set SearchboxTaskbarMode = 0: %w", err)
+	}
+
+	fmt.Println("✅ Search box will be hidden (SearchboxTaskbarMode = 0)")
+
+	if restartExplorer {
+		if err := exec.Command("taskkill", "/f", "/im", "explorer.exe").Run(); err != nil {
+			return fmt.Errorf("❌ Failed to stop Explorer: %w", err)
+		}
+		if err := exec.Command("explorer.exe").Start(); err != nil {
+			return fmt.Errorf("❌ Failed to restart Explorer: %w", err)
+		}
+		fmt.Println("🔁 Explorer restarted to apply hiding of search box.")
+	} else {
+		fmt.Println("ℹ️ Explorer restart skipped.")
+	}
+
+	return nil
+}
+
+// Do_not_hide_search_box sets SearchboxTaskbarMode = 2 to show the full search box on the taskbar.
+// If restartExplorer is true, Explorer will be restarted to apply the change.
+func Do_not_hide_search_box(restartExplorer bool) error {
+	keyPath := `Software\Microsoft\Windows\CurrentVersion\Search`
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open/create registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetDWordValue("SearchboxTaskbarMode", 2); err != nil {
+		return fmt.Errorf("❌ Failed to set SearchboxTaskbarMode = 2: %w", err)
+	}
+
+	fmt.Println("✅ Search box will be shown (SearchboxTaskbarMode = 2)")
+
+	if restartExplorer {
+		if err := exec.Command("taskkill", "/f", "/im", "explorer.exe").Run(); err != nil {
+			return fmt.Errorf("❌ Failed to stop Explorer: %w", err)
+		}
+		if err := exec.Command("explorer.exe").Start(); err != nil {
+			return fmt.Errorf("❌ Failed to restart Explorer: %w", err)
+		}
+		fmt.Println("🔁 Explorer restarted to apply showing of search box.")
+	} else {
+		fmt.Println("ℹ️ Explorer restart skipped.")
+	}
+
+	return nil
+}
