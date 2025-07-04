@@ -1,6 +1,7 @@
 package system_management_functions
 
 import (
+	"archive/zip"
 	"fmt"
 	"io"
 	"log"
@@ -471,5 +472,68 @@ func Create_desktop_shortcut(target_path, shortcut_name, description string, win
 	}
 
 	fmt.Printf("✅ Shortcut created at: %s\n", shortcutPath)
+	return nil
+}
+
+// Extract_zip extracts a ZIP archive specified by src into the destination directory dest.
+//
+// It protects against Zip Slip attacks by ensuring all extracted paths are within dest.
+//
+// Parameters:
+//   - src:  Full path to the ZIP archive.
+//   - dest: Destination directory where the contents will be extracted.
+//
+// Returns:
+//   - An error if extraction fails, or nil on success.
+func Extract_zip(src, dest string) error {
+	r, err := zip.OpenReader(src)
+	if err != nil {
+		return fmt.Errorf("❌ failed to open zip archive: %w", err)
+	}
+	defer r.Close()
+
+	for _, file := range r.File {
+		fpath := filepath.Join(dest, file.Name)
+
+		// Zip Slip protection
+		if !strings.HasPrefix(filepath.Clean(fpath), filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("❌ illegal file path in archive: %s", fpath)
+		}
+
+		// Directory entry
+		if file.FileInfo().IsDir() {
+			if err := os.MkdirAll(fpath, file.Mode()); err != nil {
+				return fmt.Errorf("❌ failed to create directory %s: %w", fpath, err)
+			}
+			continue
+		}
+
+		// Ensure parent directory exists
+		if err := os.MkdirAll(filepath.Dir(fpath), 0755); err != nil {
+			return fmt.Errorf("❌ failed to create parent directory for %s: %w", fpath, err)
+		}
+
+		// Open destination file
+		outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+		if err != nil {
+			return fmt.Errorf("❌ failed to create file %s: %w", fpath, err)
+		}
+
+		// Open zip file entry
+		rc, err := file.Open()
+		if err != nil {
+			outFile.Close()
+			return fmt.Errorf("❌ failed to open zip entry %s: %w", file.Name, err)
+		}
+
+		// Copy contents
+		_, err = io.Copy(outFile, rc)
+		outFile.Close()
+		rc.Close()
+		if err != nil {
+			return fmt.Errorf("❌ failed to copy data to file %s: %w", fpath, err)
+		}
+	}
+
 	return nil
 }
