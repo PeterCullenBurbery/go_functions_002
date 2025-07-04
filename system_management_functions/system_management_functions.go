@@ -715,3 +715,59 @@ func Set_light_mode(restartExplorer bool) error {
 
 	return nil
 }
+
+// Set_start_menu_to_left sets the Windows 11 taskbar alignment to the left
+// by writing TaskbarAl=0 in the registry and restarting Explorer.
+func Set_start_menu_to_left() error {
+	keyPath := `Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced`
+	key, err := registry.OpenKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetDWordValue("TaskbarAl", 0); err != nil {
+		return fmt.Errorf("❌ Failed to set TaskbarAl to 0: %w", err)
+	}
+
+	fmt.Println("✅ Registry updated: TaskbarAl = 0 (left)")
+
+	// Restart Explorer
+	if err := exec.Command("taskkill", "/f", "/im", "explorer.exe").Run(); err != nil {
+		return fmt.Errorf("❌ Failed to stop Explorer: %w", err)
+	}
+	if err := exec.Command("explorer.exe").Start(); err != nil {
+		return fmt.Errorf("❌ Failed to restart Explorer: %w", err)
+	}
+
+	fmt.Println("🔁 Explorer restarted to apply Start menu alignment (left)")
+	return nil
+}
+
+// Set_start_menu_to_center sets the Windows 11 taskbar alignment to the center
+// by writing TaskbarAl=1 in the registry and restarting Explorer.
+func Set_start_menu_to_center() error {
+	keyPath := `Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced`
+	key, err := registry.OpenKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetDWordValue("TaskbarAl", 1); err != nil {
+		return fmt.Errorf("❌ Failed to set TaskbarAl to 1: %w", err)
+	}
+
+	fmt.Println("✅ Registry updated: TaskbarAl = 1 (center)")
+
+	// Restart Explorer
+	if err := exec.Command("taskkill", "/f", "/im", "explorer.exe").Run(); err != nil {
+		return fmt.Errorf("❌ Failed to stop Explorer: %w", err)
+	}
+	if err := exec.Command("explorer.exe").Start(); err != nil {
+		return fmt.Errorf("❌ Failed to restart Explorer: %w", err)
+	}
+
+	fmt.Println("🔁 Explorer restarted to apply Start menu alignment (center)")
+	return nil
+}
