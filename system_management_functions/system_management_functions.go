@@ -309,3 +309,90 @@ func Add_to_path(path_to_add string) error {
 
 	return nil
 }
+
+// Remove_from_path removes the given path from the system PATH if present.
+// It normalizes the path, modifies HKLM registry, and broadcasts environment changes.
+func Remove_from_path(path_to_remove string) error {
+	// Resolve to absolute path
+	absPath, err := filepath.Abs(path_to_remove)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to resolve absolute path: %w", err)
+	}
+
+	// If it's a file, get parent directory
+	info, err := os.Stat(absPath)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to stat path: %w", err)
+	}
+	if !info.IsDir() {
+		absPath = filepath.Dir(absPath)
+	}
+	normalizedPath := strings.TrimRight(absPath, `\`)
+
+	// Open system environment key
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE,
+		`SYSTEM\CurrentControlSet\Control\Session Manager\Environment`,
+		registry.QUERY_VALUE|registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open system environment registry key: %w", err)
+	}
+	defer key.Close()
+
+	// Get current PATH
+	currentPath, _, err := key.GetStringValue("Path")
+	if err != nil {
+		return fmt.Errorf("❌ Failed to read PATH: %w", err)
+	}
+
+	entries := strings.Split(currentPath, ";")
+	normalizedEntries := make([]string, 0, len(entries))
+	found := false
+
+	for _, entry := range entries {
+		trimmed := strings.TrimRight(entry, `\`)
+		if strings.EqualFold(trimmed, normalizedPath) {
+			found = true
+			continue
+		}
+		normalizedEntries = append(normalizedEntries, entry)
+	}
+
+	if !found {
+		fmt.Println("ℹ️ Path not found in system PATH.")
+		return nil
+	}
+
+	newPath := strings.Join(normalizedEntries, ";")
+	if err := key.SetStringValue("Path", newPath); err != nil {
+		return fmt.Errorf("❌ Failed to update PATH in registry: %w", err)
+	}
+	fmt.Printf("✅ Path '%s' removed from system PATH.\n", normalizedPath)
+
+	// Broadcast environment change
+	const (
+		HWND_BROADCAST   = 0xffff
+		WM_SETTINGCHANGE = 0x001A
+		SMTO_ABORTIFHUNG = 0x0002
+	)
+
+	user32 := syscall.NewLazyDLL("user32.dll")
+	procSendMessageTimeout := user32.NewProc("SendMessageTimeoutW")
+
+	ret, _, _ := procSendMessageTimeout.Call(
+		uintptr(HWND_BROADCAST),
+		uintptr(WM_SETTINGCHANGE),
+		0,
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr("Environment"))),
+		uintptr(SMTO_ABORTIFHUNG),
+		5000,
+		uintptr(0),
+	)
+
+	if ret == 0 {
+		fmt.Println("⚠️ Environment change broadcast may have failed.")
+	} else {
+		fmt.Println("📢 Environment update broadcast sent.")
+	}
+
+	return nil
+}
