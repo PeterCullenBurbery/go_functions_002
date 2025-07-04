@@ -2,10 +2,12 @@ package system_management_functions
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"net/http"
 	"strings"
 )
 
@@ -185,5 +187,40 @@ func Winget_install(package_name string, package_id string) error {
 	}
 
 	log.Printf("✅ %s installed successfully via winget.", package_name)
+	return nil
+}
+
+// Download_file downloads a file from the given URL and saves it to the specified destination path.
+//
+// Parameters:
+//   - destination_path: The full file path (including filename) where the downloaded content will be saved.
+//   - url: The HTTP or HTTPS URL from which to download the file.
+//
+// Returns:
+//   - An error if the download, file creation, or writing fails; otherwise, nil.
+//
+// Example:
+//   err := Download_file("C:\\downloads\\example.exe", "https://example.com/file.exe")
+//   if err != nil {
+//       log.Fatalf("Download failed: %v", err)
+//   }
+func Download_file(destination_path string, url string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("HTTP GET failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	out, err := os.Create(destination_path)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	}
+
 	return nil
 }
