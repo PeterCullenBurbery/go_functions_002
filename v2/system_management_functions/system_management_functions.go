@@ -2,6 +2,7 @@ package system_management_functions
 
 import (
 	"archive/zip"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"net/http"
 	"strings"
 	"syscall"
+	"time"
 	"unsafe"
 
 	"github.com/go-ole/go-ole"
@@ -1693,5 +1695,76 @@ func Remove_from_ps_module_path(input_path string) error {
 	}
 
 	fmt.Println("✅ Removed from PSModulePath:", directory_to_remove)
+	return nil
+}
+
+// Enable_SSH ensures the "sshd" service is set to Automatic and Running.
+func Enable_SSH() error {
+	serviceName := "sshd"
+
+	for {
+		// Check if service exists
+		checkCmd := exec.Command("powershell", "-Command", fmt.Sprintf(`Get-Service -Name '%s'`, serviceName))
+		if err := checkCmd.Run(); err != nil {
+			return fmt.Errorf("❌ Service '%s' not found", serviceName)
+		}
+
+		// Get current status and start type
+		var queryOutput bytes.Buffer
+		queryCmd := exec.Command("powershell", "-Command", fmt.Sprintf(`$s = Get-Service -Name '%s'; $mode = (Get-CimInstance -ClassName Win32_Service -Filter "Name='%s'").StartMode; "$($s.Status)|$mode"`, serviceName, serviceName))
+		queryCmd.Stdout = &queryOutput
+		if err := queryCmd.Run(); err != nil {
+			return fmt.Errorf("❌ Failed to query service state: %w", err)
+		}
+
+		output := strings.TrimSpace(queryOutput.String())
+		parts := strings.Split(output, "|")
+		if len(parts) != 2 {
+			return fmt.Errorf("❌ Unexpected service query output: %s", output)
+		}
+
+		status := parts[0]
+		startMode := parts[1]
+
+		fmt.Printf("🔎 Current State — Name: %s | Status: %s | StartType: %s\n", serviceName, status, startMode)
+
+		changed := false
+
+		if !strings.EqualFold(startMode, "Auto") {
+			fmt.Println("⚙️ Setting StartType to 'Automatic'...")
+			setCmd := exec.Command("powershell", "-Command", fmt.Sprintf(`Set-Service -Name '%s' -StartupType Automatic`, serviceName))
+			if err := setCmd.Run(); err != nil {
+				return fmt.Errorf("❌ Failed to set start mode: %w", err)
+			}
+			changed = true
+		}
+
+		if !strings.EqualFold(status, "Running") {
+			fmt.Println("🚀 Starting SSHD service...")
+			startCmd := exec.Command("powershell", "-Command", fmt.Sprintf(`Start-Service -Name '%s'`, serviceName))
+			if err := startCmd.Run(); err != nil {
+				return fmt.Errorf("❌ Failed to start sshd: %w", err)
+			}
+			changed = true
+		}
+
+		if !changed {
+			fmt.Println("✅ SSHD is Running and set to Automatic. Done.")
+			break
+		}
+
+		time.Sleep(2 * time.Second)
+	}
+
+	// Final confirmation
+	fmt.Println("📋 Final State:")
+	var finalOutput bytes.Buffer
+	statusCmd := exec.Command("powershell", "-Command", fmt.Sprintf(`Get-Service -Name '%s' | Select-Object Name, Status, StartType`, serviceName))
+	statusCmd.Stdout = &finalOutput
+	if err := statusCmd.Run(); err != nil {
+		return fmt.Errorf("❌ Failed to fetch final state: %w", err)
+	}
+	fmt.Print(finalOutput.String())
+
 	return nil
 }
