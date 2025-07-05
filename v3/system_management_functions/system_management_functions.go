@@ -1768,3 +1768,79 @@ func Enable_SSH() error {
 
 	return nil
 }
+
+// Enable_SSH_through_firewall ensures that TCP port 22 is allowed in the firewall for all profiles.
+func Enable_SSH_through_firewall() error {
+	port := "22"
+	ruleName := "Allow-SSH"
+
+	// Get active network profiles
+	var profileBuf bytes.Buffer
+	profileCmd := exec.Command("powershell", "-Command", `(Get-NetConnectionProfile).NetworkCategory`)
+	profileCmd.Stdout = &profileBuf
+	if err := profileCmd.Run(); err != nil {
+		return fmt.Errorf("❌ Failed to get active network profiles: %w", err)
+	}
+	activeProfiles := strings.Fields(profileBuf.String())
+
+	// Check if a matching rule already exists
+	checkScript := `
+$port = ` + port + `
+$profiles = @("` + strings.Join(activeProfiles, `","`) + `")
+$rules = Get-NetFirewallRule -Enabled True -Direction Inbound -Action Allow |
+    Where-Object {
+        ($_ | Get-NetFirewallPortFilter).Protocol -eq "TCP" -and
+        ($_ | Get-NetFirewallPortFilter).LocalPort -eq "$port" -and
+        ($_ | Get-NetFirewallProfile).Profile -match ($profiles -join "|")
+    }
+if ($rules) { "FOUND" } else { "NOTFOUND" }
+`
+	var ruleCheckOut bytes.Buffer
+	checkRuleCmd := exec.Command("powershell", "-Command", checkScript)
+	checkRuleCmd.Stdout = &ruleCheckOut
+	if err := checkRuleCmd.Run(); err != nil {
+		return fmt.Errorf("❌ Failed to check existing firewall rules: %w", err)
+	}
+
+	if strings.Contains(ruleCheckOut.String(), "FOUND") {
+		fmt.Printf("✅ SSH is already allowed on port 22 for profile(s): %v. No action needed.\n", activeProfiles)
+		return nil
+	}
+
+	fmt.Printf("🔐 No firewall rule allows SSH on port 22 for profile(s): %v. Creating '%s'...\n", activeProfiles, ruleName)
+
+	// Create rule
+	createScript := `
+New-NetFirewallRule -Name "` + ruleName + `" -DisplayName "Allow SSH on Port 22" `
+	createScript += `-Enabled True -Direction Inbound -Protocol TCP -Action Allow `
+	createScript += `-LocalPort ` + port + ` -Profile Domain,Private,Public -ErrorAction Stop
+`
+
+	if err := exec.Command("powershell", "-Command", createScript).Run(); err != nil {
+		return fmt.Errorf("❌ Failed to create firewall rule '%s': %w", ruleName, err)
+	}
+
+	// Verify rule
+	verifyScript := `
+$r = Get-NetFirewallRule -Name "` + ruleName + `" -ErrorAction Stop
+if ($r.Enabled -eq 'True' -and $r.Direction -eq 'Inbound' -and $r.Action -eq 'Allow') {
+    "OK"
+} else {
+    "BAD"
+}
+`
+	var verifyOut bytes.Buffer
+	verifyCmd := exec.Command("powershell", "-Command", verifyScript)
+	verifyCmd.Stdout = &verifyOut
+	if err := verifyCmd.Run(); err != nil {
+		return fmt.Errorf("❌ Rule verification failed: %w", err)
+	}
+
+	if strings.Contains(verifyOut.String(), "OK") {
+		fmt.Printf("✅ Rule '%s' successfully created and verified.\n", ruleName)
+	} else {
+		fmt.Printf("⚠️ Rule '%s' was created but doesn't match expected parameters.\n", ruleName)
+	}
+
+	return nil
+}
