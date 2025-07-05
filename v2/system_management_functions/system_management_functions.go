@@ -1508,3 +1508,76 @@ func Convert_blob_to_raw_github_url(blob_url string) (string, error) {
 	raw_url := strings.Replace(blob_url, blob_segment, raw_segment, 1)
 	return raw_url, nil
 }
+
+// Add_to_ps_module_path adds the given directory to the system-wide PSModulePath environment variable.
+func Add_to_ps_module_path(directory string) error {
+	directory = strings.TrimRight(directory, `\`)
+
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Control\Session Manager\Environment`, registry.QUERY_VALUE|registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open environment registry key: %w", err)
+	}
+	defer key.Close()
+
+	currentPath, _, err := key.GetStringValue("PSModulePath")
+	if err != nil {
+		return fmt.Errorf("❌ Failed to read PSModulePath: %w", err)
+	}
+
+	paths := strings.Split(currentPath, ";")
+	for _, p := range paths {
+		if strings.EqualFold(strings.TrimRight(p, `\`), directory) {
+			fmt.Println("⚠️ Already exists in PSModulePath:", directory)
+			return nil
+		}
+	}
+
+	newPath := currentPath + ";" + directory
+	if err := key.SetStringValue("PSModulePath", newPath); err != nil {
+		return fmt.Errorf("❌ Failed to update PSModulePath: %w", err)
+	}
+
+	fmt.Println("✅ Added to PSModulePath:", directory)
+	return nil
+}
+
+// Remove_from_ps_module_path removes the given directory from the system-wide PSModulePath environment variable.
+func Remove_from_ps_module_path(directory string) error {
+	directory = strings.TrimRight(directory, `\`)
+
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Control\Session Manager\Environment`, registry.QUERY_VALUE|registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open environment registry key: %w", err)
+	}
+	defer key.Close()
+
+	currentPath, _, err := key.GetStringValue("PSModulePath")
+	if err != nil {
+		return fmt.Errorf("❌ Failed to read PSModulePath: %w", err)
+	}
+
+	paths := strings.Split(currentPath, ";")
+	var updated []string
+	found := false
+
+	for _, p := range paths {
+		if strings.EqualFold(strings.TrimRight(p, `\`), directory) {
+			found = true
+		} else {
+			updated = append(updated, p)
+		}
+	}
+
+	if !found {
+		fmt.Println("⚠️ Not found in PSModulePath:", directory)
+		return nil
+	}
+
+	newPath := strings.Join(updated, ";")
+	if err := key.SetStringValue("PSModulePath", newPath); err != nil {
+		return fmt.Errorf("❌ Failed to update PSModulePath: %w", err)
+	}
+
+	fmt.Println("✅ Removed from PSModulePath:", directory)
+	return nil
+}
