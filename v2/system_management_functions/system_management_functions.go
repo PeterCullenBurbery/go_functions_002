@@ -1472,3 +1472,39 @@ func Set_first_day_of_week_Sunday() error {
 	fmt.Println("✅ First day of the week set to Sunday (iFirstDayOfWeek = 6).")
 	return nil
 }
+
+// Convert_blob_to_raw_github_url transforms a GitHub "blob" URL into a "raw" content URL.
+//
+// GitHub's web interface often shows files using a URL like:
+//   https://github.com/{user}/{repo}/blob/{branch}/{path/to/file}
+//
+// But to access the raw file directly through GitHub (still using the github.com domain),
+// the equivalent raw content URL is:
+//   https://github.com/{user}/{repo}/raw/{branch}/{path/to/file}
+//
+// This function performs the necessary transformation by replacing the "/blob/" segment
+// in the URL with "/raw/".
+//
+// For example:
+//   Input:
+//     https://github.com/user/repo/blob/main/script.ps1
+//   Output:
+//     https://github.com/user/repo/raw/main/script.ps1
+//
+// Parameters:
+//   - blob_url: the GitHub "blob" URL to convert
+//
+// Returns:
+//   - The corresponding "raw" content URL
+//   - An error if the input does not contain the expected "/blob/" segment
+func Convert_blob_to_raw_github_url(blob_url string) (string, error) {
+	const blob_segment = "/blob/"
+	const raw_segment = "/raw/"
+
+	if !strings.Contains(blob_url, blob_segment) {
+		return "", fmt.Errorf("❌ input does not contain /blob/: %s", blob_url)
+	}
+
+	raw_url := strings.Replace(blob_url, blob_segment, raw_segment, 1)
+	return raw_url, nil
+}
