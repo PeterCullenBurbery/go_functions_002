@@ -1346,3 +1346,93 @@ func Reset_time_pattern() error {
 	fmt.Println("🔄 System broadcast completed to apply default time settings.")
 	return nil
 }
+
+// Set_24_hour_format configures Windows to use 24-hour time by setting iTime = 1.
+func Set_24_hour_format() error {
+	const (
+		keyPath = `Control Panel\International`
+		broadcastMsg = "Intl"
+	)
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetStringValue("iTime", "1"); err != nil {
+		return fmt.Errorf("❌ Failed to set iTime = 1: %w", err)
+	}
+
+	fmt.Println("✅ Windows is now configured to use 24-hour time (iTime = 1).")
+
+	const (
+		HWND_BROADCAST   = 0xffff
+		WM_SETTINGCHANGE = 0x001A
+		SMTO_ABORTIFHUNG = 0x0002
+	)
+
+	user32 := syscall.NewLazyDLL("user32.dll")
+	sendMessageTimeout := user32.NewProc("SendMessageTimeoutW")
+
+	ptr := syscall.StringToUTF16Ptr(broadcastMsg)
+	var result uintptr
+
+	_, _, _ = sendMessageTimeout.Call(
+		uintptr(HWND_BROADCAST),
+		uintptr(WM_SETTINGCHANGE),
+		0,
+		uintptr(unsafe.Pointer(ptr)),
+		uintptr(SMTO_ABORTIFHUNG),
+		100,
+		uintptr(unsafe.Pointer(&result)),
+	)
+
+	fmt.Println("🔄 System broadcast completed to apply the setting.")
+	return nil
+}
+
+// Do_not_use_24_hour_format configures Windows to use 12-hour time by setting iTime = 0.
+func Do_not_use_24_hour_format() error {
+	const (
+		keyPath = `Control Panel\International`
+		broadcastMsg = "Intl"
+	)
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetStringValue("iTime", "0"); err != nil {
+		return fmt.Errorf("❌ Failed to set iTime = 0: %w", err)
+	}
+
+	fmt.Println("✅ Windows is now configured to use 12-hour time (iTime = 0).")
+
+	const (
+		HWND_BROADCAST   = 0xffff
+		WM_SETTINGCHANGE = 0x001A
+		SMTO_ABORTIFHUNG = 0x0002
+	)
+
+	user32 := syscall.NewLazyDLL("user32.dll")
+	sendMessageTimeout := user32.NewProc("SendMessageTimeoutW")
+
+	ptr := syscall.StringToUTF16Ptr(broadcastMsg)
+	var result uintptr
+
+	_, _, _ = sendMessageTimeout.Call(
+		uintptr(HWND_BROADCAST),
+		uintptr(WM_SETTINGCHANGE),
+		0,
+		uintptr(unsafe.Pointer(ptr)),
+		uintptr(SMTO_ABORTIFHUNG),
+		100,
+		uintptr(unsafe.Pointer(&result)),
+	)
+
+	fmt.Println("🔄 System broadcast completed to apply the setting.")
+	return nil
+}
