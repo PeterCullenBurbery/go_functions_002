@@ -2,6 +2,7 @@ package system_management_functions
 
 import (
 	"archive/zip"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -1509,11 +1510,71 @@ func Convert_blob_to_raw_github_url(blob_url string) (string, error) {
 	return raw_url, nil
 }
 
-// Add_to_ps_module_path adds the given directory to the system-wide PSModulePath environment variable.
-func Add_to_ps_module_path(directory string) error {
-	directory = strings.TrimRight(directory, `\`)
+// Add_to_ps_module_path resolves the appropriate parent directory
+// based on a given file or folder path and adds it to the system-wide PSModulePath
+//
+// Supported input:
+// - .psm1 or .psd1 file => adds the grandparent directory
+// - folder with only .psm1 or .psd1 files => adds parent of that folder
+// - otherwise adds folder itself
+func Add_to_ps_module_path(input_path string) error {
+	resolved_path, err := filepath.Abs(input_path)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to resolve path: %w", err)
+	}
 
-	key, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Control\Session Manager\Environment`, registry.QUERY_VALUE|registry.SET_VALUE)
+	info, err := os.Stat(resolved_path)
+	if err != nil {
+		return fmt.Errorf("❌ Path error: %w", err)
+	}
+
+	var directory_to_add string
+
+	if !info.IsDir() {
+		ext := strings.ToLower(filepath.Ext(resolved_path))
+		if ext == ".psm1" || ext == ".psd1" {
+			module_folder := filepath.Dir(resolved_path)
+			directory_to_add = filepath.Dir(module_folder)
+		} else {
+			return errors.New("❌ Input is a file but not .psm1 or .psd1")
+		}
+	} else {
+		dir_entries, err := os.ReadDir(resolved_path)
+		if err != nil {
+			return fmt.Errorf("❌ Failed to read folder: %w", err)
+		}
+
+		has_psm1 := false
+		invalid := false
+		for _, entry := range dir_entries {
+			if entry.IsDir() {
+				continue
+			}
+			ext := strings.ToLower(filepath.Ext(entry.Name()))
+			switch ext {
+			case ".psm1":
+				has_psm1 = true
+			case ".psd1":
+				// optional
+			default:
+				invalid = true
+			}
+		}
+
+		if has_psm1 && !invalid {
+			directory_to_add = filepath.Dir(resolved_path)
+		} else {
+			directory_to_add = resolved_path
+		}
+	}
+
+	// Trim trailing slashes for comparison
+	directory_to_add = strings.TrimRight(directory_to_add, `\`)
+
+	// Modify the registry
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE,
+		`SYSTEM\CurrentControlSet\Control\Session Manager\Environment`,
+		registry.QUERY_VALUE|registry.SET_VALUE)
 	if err != nil {
 		return fmt.Errorf("❌ Failed to open environment registry key: %w", err)
 	}
@@ -1526,26 +1587,80 @@ func Add_to_ps_module_path(directory string) error {
 
 	paths := strings.Split(currentPath, ";")
 	for _, p := range paths {
-		if strings.EqualFold(strings.TrimRight(p, `\`), directory) {
-			fmt.Println("⚠️ Already exists in PSModulePath:", directory)
+		if strings.EqualFold(strings.TrimRight(p, `\`), directory_to_add) {
+			fmt.Println("⚠️ Already exists in PSModulePath:", directory_to_add)
 			return nil
 		}
 	}
 
-	newPath := currentPath + ";" + directory
+	newPath := currentPath + ";" + directory_to_add
 	if err := key.SetStringValue("PSModulePath", newPath); err != nil {
 		return fmt.Errorf("❌ Failed to update PSModulePath: %w", err)
 	}
 
-	fmt.Println("✅ Added to PSModulePath:", directory)
+	fmt.Println("✅ Added to PSModulePath:", directory_to_add)
 	return nil
 }
 
-// Remove_from_ps_module_path removes the given directory from the system-wide PSModulePath environment variable.
-func Remove_from_ps_module_path(directory string) error {
-	directory = strings.TrimRight(directory, `\`)
+// Remove_from_ps_module_path resolves the appropriate parent directory
+// based on a given file or folder path and removes it from the system-wide PSModulePath.
+func Remove_from_ps_module_path(input_path string) error {
+	resolved_path, err := filepath.Abs(input_path)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to resolve path: %w", err)
+	}
 
-	key, err := registry.OpenKey(registry.LOCAL_MACHINE, `SYSTEM\CurrentControlSet\Control\Session Manager\Environment`, registry.QUERY_VALUE|registry.SET_VALUE)
+	info, err := os.Stat(resolved_path)
+	if err != nil {
+		return fmt.Errorf("❌ Path error: %w", err)
+	}
+
+	var directory_to_remove string
+
+	if !info.IsDir() {
+		ext := strings.ToLower(filepath.Ext(resolved_path))
+		if ext == ".psm1" || ext == ".psd1" {
+			module_folder := filepath.Dir(resolved_path)
+			directory_to_remove = filepath.Dir(module_folder)
+		} else {
+			return errors.New("❌ Input is a file but not .psm1 or .psd1")
+		}
+	} else {
+		dir_entries, err := os.ReadDir(resolved_path)
+		if err != nil {
+			return fmt.Errorf("❌ Failed to read folder: %w", err)
+		}
+
+		has_psm1 := false
+		invalid := false
+		for _, entry := range dir_entries {
+			if entry.IsDir() {
+				continue
+			}
+			ext := strings.ToLower(filepath.Ext(entry.Name()))
+			switch ext {
+			case ".psm1":
+				has_psm1 = true
+			case ".psd1":
+				// optional
+			default:
+				invalid = true
+			}
+		}
+
+		if has_psm1 && !invalid {
+			directory_to_remove = filepath.Dir(resolved_path)
+		} else {
+			directory_to_remove = resolved_path
+		}
+	}
+
+	directory_to_remove = strings.TrimRight(directory_to_remove, `\`)
+
+	// Modify the registry
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE,
+		`SYSTEM\CurrentControlSet\Control\Session Manager\Environment`,
+		registry.QUERY_VALUE|registry.SET_VALUE)
 	if err != nil {
 		return fmt.Errorf("❌ Failed to open environment registry key: %w", err)
 	}
@@ -1557,27 +1672,26 @@ func Remove_from_ps_module_path(directory string) error {
 	}
 
 	paths := strings.Split(currentPath, ";")
-	var updated []string
+	newPaths := make([]string, 0, len(paths))
 	found := false
-
 	for _, p := range paths {
-		if strings.EqualFold(strings.TrimRight(p, `\`), directory) {
+		if strings.EqualFold(strings.TrimRight(p, `\`), directory_to_remove) {
 			found = true
-		} else {
-			updated = append(updated, p)
+			continue // skip this entry
 		}
+		newPaths = append(newPaths, p)
 	}
 
 	if !found {
-		fmt.Println("⚠️ Not found in PSModulePath:", directory)
+		fmt.Println("⚠️ Path not found in PSModulePath:", directory_to_remove)
 		return nil
 	}
 
-	newPath := strings.Join(updated, ";")
+	newPath := strings.Join(newPaths, ";")
 	if err := key.SetStringValue("PSModulePath", newPath); err != nil {
 		return fmt.Errorf("❌ Failed to update PSModulePath: %w", err)
 	}
 
-	fmt.Println("✅ Removed from PSModulePath:", directory)
+	fmt.Println("✅ Removed from PSModulePath:", directory_to_remove)
 	return nil
 }
