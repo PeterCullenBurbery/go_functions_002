@@ -147,10 +147,8 @@ func File_exists(path string) bool {
 }
 
 // Install_Java ensures Java is installed by checking Is_Java_installed().
-// If not found, it installs the temurin21 JDK via Chocolatey.
-// You could use Is java installed after choco_install(java).
-// Install_Java ensures Java is installed by checking Is_Java_installed().
-// If not found, it installs the temurin21 JDK via Chocolatey and verifies the result.
+// If not found, it installs the temurin21 JDK via Chocolatey,
+// verifies the result, and sets JAVA_HOME to the default installation path using PowerShell.
 func Install_Java() error {
 	log.Println("📦 Checking if Java is already installed...")
 
@@ -171,6 +169,21 @@ func Install_Java() error {
 	}
 
 	log.Println("✅ temurin21 JDK installation complete and verified.")
+
+	// Set JAVA_HOME using PowerShell
+	java_home := `C:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot`
+	log.Printf("🔧 Setting JAVA_HOME to %s using PowerShell...", java_home)
+
+	ps_command := fmt.Sprintf(`[Environment]::SetEnvironmentVariable("JAVA_HOME", "%s", "Machine")`, java_home)
+	cmd := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps_command)
+	cmd.Stdout = log.Writer()
+	cmd.Stderr = log.Writer()
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("❌ Failed to set JAVA_HOME via PowerShell: %w", err)
+	}
+
+	log.Println("✅ JAVA_HOME environment variable set successfully.")
 	return nil
 }
 
