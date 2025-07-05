@@ -1782,8 +1782,8 @@ func run_powershell(command string) (string, error) {
 	return strings.TrimSpace(stdout.String()), nil
 }
 
-// Enable_ssh_through_firewall ensures that TCP port 22 is allowed in the firewall for all profiles.
-func Enable_ssh_through_firewall() error {
+// Enable_SSH_through_firewall ensures that TCP port 22 is allowed in the firewall for all profiles.
+func Enable_SSH_through_firewall() error {
 	// Step 1: Get active network profile (Public/Private/Domain)
 	active_profile, err := run_powershell(`(Get-NetConnectionProfile).NetworkCategory`)
 	if err != nil {
