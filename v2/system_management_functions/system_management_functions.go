@@ -1227,3 +1227,122 @@ func Reset_long_date_pattern() error {
 	fmt.Println("📢 System broadcast sent to apply the setting.")
 	return nil
 }
+
+// Set_time_pattern sets custom time patterns and separator:
+// - Long time:  "HH.mm.ss"
+// - Short time: "HH.mm.ss"
+// - Separator:  "."
+func Set_time_pattern() error {
+	const (
+		keyPath       = `Control Panel\International`
+		sTimeFormat   = "HH.mm.ss"
+		sShortTime    = "HH.mm.ss"
+		sTime         = "."
+		broadcastMsg  = "Intl"
+	)
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetStringValue("sTimeFormat", sTimeFormat); err != nil {
+		return fmt.Errorf("❌ Failed to set sTimeFormat: %w", err)
+	}
+	if err := key.SetStringValue("sShortTime", sShortTime); err != nil {
+		return fmt.Errorf("❌ Failed to set sShortTime: %w", err)
+	}
+	if err := key.SetStringValue("sTime", sTime); err != nil {
+		return fmt.Errorf("❌ Failed to set sTime (separator): %w", err)
+	}
+
+	fmt.Println("✅ Time format set:")
+	fmt.Printf("   Long time  (sTimeFormat): %s\n", sTimeFormat)
+	fmt.Printf("   Short time (sShortTime) : %s\n", sShortTime)
+	fmt.Printf("   Time separator (sTime)  : %s\n", sTime)
+
+	// Broadcast setting change
+	const (
+		HWND_BROADCAST   = 0xffff
+		WM_SETTINGCHANGE = 0x001A
+		SMTO_ABORTIFHUNG = 0x0002
+	)
+
+	user32 := syscall.NewLazyDLL("user32.dll")
+	sendMessageTimeout := user32.NewProc("SendMessageTimeoutW")
+
+	ptr := syscall.StringToUTF16Ptr(broadcastMsg)
+	var result uintptr
+
+	_, _, _ = sendMessageTimeout.Call(
+		uintptr(HWND_BROADCAST),
+		uintptr(WM_SETTINGCHANGE),
+		0,
+		uintptr(unsafe.Pointer(ptr)),
+		uintptr(SMTO_ABORTIFHUNG),
+		100,
+		uintptr(unsafe.Pointer(&result)),
+	)
+
+	fmt.Println("🔄 System broadcast completed to apply time settings.")
+	return nil
+}
+
+// Reset_time_pattern resets long/short time format and separator to system defaults.
+func Reset_time_pattern() error {
+	const (
+		keyPath           = `Control Panel\International`
+		defaultTimeFormat = "HH:mm:ss"   // Long time
+		defaultShortTime  = "h:mm tt"    // Short time
+		defaultSeparator  = ":"
+		broadcastMsg      = "Intl"
+	)
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetStringValue("sTimeFormat", defaultTimeFormat); err != nil {
+		return fmt.Errorf("❌ Failed to reset sTimeFormat: %w", err)
+	}
+	if err := key.SetStringValue("sShortTime", defaultShortTime); err != nil {
+		return fmt.Errorf("❌ Failed to reset sShortTime: %w", err)
+	}
+	if err := key.SetStringValue("sTime", defaultSeparator); err != nil {
+		return fmt.Errorf("❌ Failed to reset sTime (separator): %w", err)
+	}
+
+	fmt.Println("✅ Time settings reset to system defaults:")
+	fmt.Printf("   Long time  (sTimeFormat): %s\n", defaultTimeFormat)
+	fmt.Printf("   Short time (sShortTime) : %s\n", defaultShortTime)
+	fmt.Printf("   Time separator (sTime)  : %s\n", defaultSeparator)
+
+	// Broadcast setting change
+	const (
+		HWND_BROADCAST   = 0xffff
+		WM_SETTINGCHANGE = 0x001A
+		SMTO_ABORTIFHUNG = 0x0002
+	)
+
+	user32 := syscall.NewLazyDLL("user32.dll")
+	sendMessageTimeout := user32.NewProc("SendMessageTimeoutW")
+
+	ptr := syscall.StringToUTF16Ptr(broadcastMsg)
+	var result uintptr
+
+	_, _, _ = sendMessageTimeout.Call(
+		uintptr(HWND_BROADCAST),
+		uintptr(WM_SETTINGCHANGE),
+		0,
+		uintptr(unsafe.Pointer(ptr)),
+		uintptr(SMTO_ABORTIFHUNG),
+		100,
+		uintptr(unsafe.Pointer(&result)),
+	)
+
+	fmt.Println("🔄 System broadcast completed to apply default time settings.")
+	return nil
+}
