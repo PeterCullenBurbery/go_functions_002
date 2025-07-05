@@ -1436,3 +1436,39 @@ func Do_not_use_24_hour_format() error {
 	fmt.Println("🔄 System broadcast completed to apply the setting.")
 	return nil
 }
+
+// Set_first_day_of_week_Monday sets Monday as the first day of the week in Windows regional settings.
+func Set_first_day_of_week_Monday() error {
+	const keyPath = `Control Panel\International`
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetStringValue("iFirstDayOfWeek", "0"); err != nil {
+		return fmt.Errorf("❌ Failed to set iFirstDayOfWeek = 0: %w", err)
+	}
+
+	fmt.Println("✅ First day of the week set to Monday (iFirstDayOfWeek = 0).")
+	return nil
+}
+
+// Set_first_day_of_week_Sunday sets Sunday as the first day of the week in Windows regional settings.
+func Set_first_day_of_week_Sunday() error {
+	const keyPath = `Control Panel\International`
+
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open registry key: %w", err)
+	}
+	defer key.Close()
+
+	if err := key.SetStringValue("iFirstDayOfWeek", "6"); err != nil {
+		return fmt.Errorf("❌ Failed to set iFirstDayOfWeek = 6: %w", err)
+	}
+
+	fmt.Println("✅ First day of the week set to Sunday (iFirstDayOfWeek = 6).")
+	return nil
+}
