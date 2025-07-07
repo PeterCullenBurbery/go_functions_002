@@ -251,61 +251,76 @@ func Download_file(destination_path string, url string) error {
 }
 
 // Add_to_path adds the given path to the top of the system PATH (HKLM) if not already present.
-// It expands existing entries to avoid adding duplicates (even if they use environment variables).
-// It also broadcasts the environment change so apps like Explorer pick it up.
+// It rewrites the PATH using only fully expanded, literal paths — no environment variables allowed.
 func Add_to_path(path_to_add string) error {
-	// Step 1: Resolve full absolute path
-	absPath, err := filepath.Abs(path_to_add)
+	// Step 1: Resolve absolute path
+	abs_path, err := filepath.Abs(path_to_add)
 	if err != nil {
 		return fmt.Errorf("❌ Failed to resolve absolute path: %w", err)
 	}
 
-	// If it's a file, get the parent folder
-	info, err := os.Stat(absPath)
+	info, err := os.Stat(abs_path)
 	if err != nil {
 		return fmt.Errorf("❌ Failed to stat path: %w", err)
 	}
 	if !info.IsDir() {
-		absPath = filepath.Dir(absPath)
+		abs_path = filepath.Dir(abs_path)
 	}
+	normalized_path := strings.TrimRight(abs_path, `\`)
 
-	// Normalize: trim trailing backslash
-	normalizedPath := strings.TrimRight(absPath, `\`)
-
-	// Step 2: Open registry key for system environment variables
-	key, err := registry.OpenKey(registry.LOCAL_MACHINE,
+	// Step 2: Open registry
+	key, err := registry.OpenKey(
+		registry.LOCAL_MACHINE,
 		`SYSTEM\CurrentControlSet\Control\Session Manager\Environment`,
 		registry.QUERY_VALUE|registry.SET_VALUE)
 	if err != nil {
-		return fmt.Errorf("❌ Failed to open system environment registry key: %w", err)
+		return fmt.Errorf("❌ Failed to open registry key: %w", err)
 	}
 	defer key.Close()
 
-	// Step 3: Read current PATH
-	currentPath, _, err := key.GetStringValue("Path")
+	// Step 3: Get and process current PATH
+	current_path, _, err := key.GetStringValue("Path")
 	if err != nil {
 		return fmt.Errorf("❌ Failed to read PATH: %w", err)
 	}
 
-	// Step 4: Normalize and expand existing entries before comparison
-	entries := strings.Split(currentPath, ";")
-	for _, entry := range entries {
-		entry = strings.TrimRight(entry, `\`)
-		expanded := os.ExpandEnv(entry)
-		if strings.EqualFold(expanded, normalizedPath) {
-			fmt.Println("✅ Path already present in system PATH (via expanded match).")
-			return nil
+	existing_entries := strings.Split(current_path, ";")
+	seen := make(map[string]bool)
+	cleaned_entries := []string{}
+	already_present := false
+
+	for _, entry := range existing_entries {
+		entry_trimmed := strings.TrimRight(entry, `\`)
+		entry_expanded := os.ExpandEnv(entry_trimmed)
+		entry_normalized := strings.TrimRight(entry_expanded, `\`)
+		entry_lower := strings.ToLower(entry_normalized)
+
+		if entry_lower == strings.ToLower(normalized_path) {
+			already_present = true
+		}
+
+		// Skip duplicates
+		if !seen[entry_lower] {
+			seen[entry_lower] = true
+			cleaned_entries = append(cleaned_entries, entry_normalized)
 		}
 	}
 
-	// Step 5: Prepend and update registry
-	newPath := normalizedPath + ";" + currentPath
-	if err := key.SetStringValue("Path", newPath); err != nil {
+	if already_present {
+		fmt.Println("✅ Path already present in system PATH (via expanded match).")
+		return nil
+	}
+
+	// Step 4: Prepend new path and rewrite PATH entirely
+	new_path := append([]string{normalized_path}, cleaned_entries...)
+	final_path := strings.Join(new_path, ";")
+
+	if err := key.SetStringValue("Path", final_path); err != nil {
 		return fmt.Errorf("❌ Failed to update PATH in registry: %w", err)
 	}
-	fmt.Println("✅ Path added to the top of system PATH.")
+	fmt.Println("✅ Path added to the top of system PATH (rewriting with literal values).")
 
-	// Step 6: Broadcast environment change
+	// Step 5: Broadcast environment change
 	const (
 		HWND_BROADCAST   = 0xffff
 		WM_SETTINGCHANGE = 0x001A
@@ -313,9 +328,9 @@ func Add_to_path(path_to_add string) error {
 	)
 
 	user32 := syscall.NewLazyDLL("user32.dll")
-	procSendMessageTimeout := user32.NewProc("SendMessageTimeoutW")
+	send_message := user32.NewProc("SendMessageTimeoutW")
 
-	ret, _, _ := procSendMessageTimeout.Call(
+	ret, _, _ := send_message.Call(
 		uintptr(HWND_BROADCAST),
 		uintptr(WM_SETTINGCHANGE),
 		0,
@@ -333,7 +348,6 @@ func Add_to_path(path_to_add string) error {
 
 	return nil
 }
-
 
 // Remove_from_path removes the given path from the system PATH if present.
 // It normalizes the path, modifies HKLM registry, and broadcasts environment changes.
