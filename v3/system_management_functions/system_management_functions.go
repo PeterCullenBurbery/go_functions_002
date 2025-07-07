@@ -315,6 +315,8 @@ func Add_to_path(path_to_add string) error {
 	new_path := append([]string{normalized_path}, cleaned_entries...)
 	final_path := strings.Join(new_path, ";")
 
+	fmt.Printf("📝 New PATH to be written:\n%s\n", final_path) // <-- Log the final path
+
 	if err := key.SetStringValue("Path", final_path); err != nil {
 		return fmt.Errorf("❌ Failed to update PATH in registry: %w", err)
 	}
