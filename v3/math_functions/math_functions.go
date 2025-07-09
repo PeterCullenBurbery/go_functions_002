@@ -4,14 +4,13 @@ package math_functions
 
 import (
 	"fmt"
+	"sort"
 )
 
-// Topological_sort performs a topological sort on a DAG using Kahn's algorithm.
-// Returns the ordered list of tasks, or an error if a cycle is detected.
+// Topological_sort performs a deterministic topological sort using Kahn's algorithm.
+// Nodes with the same precedence are sorted alphabetically for consistent output.
 func Topological_sort(graph map[string][]string) ([]string, error) {
 	in_degree := make(map[string]int)
-
-	// Count in-degrees
 	for node := range graph {
 		in_degree[node] = 0
 	}
@@ -21,13 +20,15 @@ func Topological_sort(graph map[string][]string) ([]string, error) {
 		}
 	}
 
-	// Start with all 0 in-degree nodes
-	var queue []string
+	// Collect nodes with in-degree 0 and sort for deterministic order
+	var zero_in_degree []string
 	for node, degree := range in_degree {
 		if degree == 0 {
-			queue = append(queue, node)
+			zero_in_degree = append(zero_in_degree, node)
 		}
 	}
+	sort.Strings(zero_in_degree) // sort alphabetically
+	queue := append([]string(nil), zero_in_degree...)
 
 	var sorted []string
 	for len(queue) > 0 {
@@ -37,10 +38,17 @@ func Topological_sort(graph map[string][]string) ([]string, error) {
 
 		for _, neighbor := range graph[current] {
 			in_degree[neighbor]--
+		}
+
+		// Add new zero-in-degree nodes, sort, and append to queue
+		var newly_zero []string
+		for _, neighbor := range graph[current] {
 			if in_degree[neighbor] == 0 {
-				queue = append(queue, neighbor)
+				newly_zero = append(newly_zero, neighbor)
 			}
 		}
+		sort.Strings(newly_zero)
+		queue = append(queue, newly_zero...)
 	}
 
 	if len(sorted) != len(graph) {
@@ -50,7 +58,7 @@ func Topological_sort(graph map[string][]string) ([]string, error) {
 	return sorted, nil
 }
 
-// Reverse_topological_sort performs a topological sort and returns the reversed order.
+// Reverse_topological_sort performs a deterministic topological sort and returns the reversed order.
 // Useful for teardown operations or viewing leaf-to-root dependencies.
 func Reverse_topological_sort(graph map[string][]string) ([]string, error) {
 	sorted, err := Topological_sort(graph)
@@ -58,7 +66,7 @@ func Reverse_topological_sort(graph map[string][]string) ([]string, error) {
 		return nil, err
 	}
 
-	// Reverse the sorted slice
+	// Reverse the sorted slice in-place
 	for i, j := 0, len(sorted)-1; i < j; i, j = i+1, j-1 {
 		sorted[i], sorted[j] = sorted[j], sorted[i]
 	}
