@@ -1919,3 +1919,57 @@ if ($r.Enabled -eq 'True' -and $r.Direction -eq 'Inbound' -and $r.Action -eq 'Al
 
 	return nil
 }
+
+// Set_system_environment_variable sets a system-wide environment variable in the registry under HKLM.
+// It also broadcasts the environment change so that Explorer and other processes recognize the update.
+func Set_system_environment_variable(variable_name string, variable_value string) error {
+	if variable_name == "" {
+		return fmt.Errorf("❌ Variable name cannot be empty")
+	}
+
+	fmt.Printf("🧾 Setting system environment variable: %s = %s\n", variable_name, variable_value)
+
+	// Step 1: Open the registry key
+	key, err := registry.OpenKey(
+		registry.LOCAL_MACHINE,
+		`SYSTEM\CurrentControlSet\Control\Session Manager\Environment`,
+		registry.SET_VALUE,
+	)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open registry key: %w", err)
+	}
+	defer key.Close()
+
+	// Step 2: Set the value
+	if err := key.SetStringValue(variable_name, variable_value); err != nil {
+		return fmt.Errorf("❌ Failed to set environment variable: %w", err)
+	}
+
+	fmt.Println("✅ Environment variable written to registry.")
+
+	// Step 3: Broadcast the environment change
+	const (
+		HWND_BROADCAST   = 0xffff
+		WM_SETTINGCHANGE = 0x001A
+		SMTO_ABORTIFHUNG = 0x0002
+	)
+	user32 := syscall.NewLazyDLL("user32.dll")
+	procSendMessageTimeout := user32.NewProc("SendMessageTimeoutW")
+
+	ret, _, _ := procSendMessageTimeout.Call(
+		uintptr(HWND_BROADCAST),
+		uintptr(WM_SETTINGCHANGE),
+		0,
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr("Environment"))),
+		uintptr(SMTO_ABORTIFHUNG),
+		5000,
+		uintptr(0),
+	)
+	if ret == 0 {
+		fmt.Println("⚠️ Environment change broadcast may have failed.")
+	} else {
+		fmt.Println("📢 Environment update broadcast sent.")
+	}
+
+	return nil
+}
