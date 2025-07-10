@@ -172,17 +172,12 @@ func Install_Java() error {
 
 	log.Println("✅ temurin21 JDK installation complete and verified.")
 
-	// Set JAVA_HOME using PowerShell
+	// Set JAVA_HOME to standard Temurin path
 	java_home := `C:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot`
-	log.Printf("🔧 Setting JAVA_HOME to %s using PowerShell...", java_home)
+	log.Printf("🔧 Setting JAVA_HOME to: %s", java_home)
 
-	ps_command := fmt.Sprintf(`[Environment]::SetEnvironmentVariable("JAVA_HOME", "%s", "Machine")`, java_home)
-	cmd := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps_command)
-	cmd.Stdout = log.Writer()
-	cmd.Stderr = log.Writer()
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("❌ Failed to set JAVA_HOME via PowerShell: %w", err)
+	if err := Set_system_environment_variable("JAVA_HOME", java_home); err != nil {
+		return fmt.Errorf("❌ Failed to set JAVA_HOME: %w", err)
 	}
 
 	log.Println("✅ JAVA_HOME environment variable set successfully.")
