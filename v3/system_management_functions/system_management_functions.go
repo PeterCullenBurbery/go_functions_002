@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"os/user"
@@ -1967,4 +1968,98 @@ func Set_system_environment_variable(variable_name string, variable_value string
 	}
 
 	return nil
+}
+
+// Get_primary_ipv4_address returns the most appropriate local IPv4 address
+// from the available network interfaces.
+//
+// It prioritizes interfaces whose names contain preferred keywords such as
+// "Wi-Fi", "Ethernet", or "Tailscale", and excludes interfaces that are
+// likely virtual, loopback, or otherwise irrelevant, such as those containing
+// "VMware", "Virtual", "Bluetooth", "Loopback", "OpenVPN", or "Disconnected".
+//
+// The function performs the following steps:
+//   1. Lists all active, non-loopback interfaces.
+//   2. Filters out interfaces matching any excluded keywords.
+//   3. Searches for an interface whose name contains a preferred keyword.
+//   4. Falls back to any remaining valid interface if no preferred one is found.
+//   5. Returns the first usable IPv4 address found.
+//
+// Returns the IPv4 address as a string, or an empty string if none are found.
+// If an error occurs while listing interfaces, it is returned.
+func Get_primary_ipv4_address() (string, error) {
+	preferred_keywords := []string{"Wi-Fi", "Ethernet", "Tailscale"}
+	excluded_keywords := []string{"VMware", "Virtual", "Bluetooth", "Loopback", "OpenVPN", "Disconnected"}
+
+	all_interfaces, err := net.Interfaces()
+	if err != nil {
+		return "", fmt.Errorf("❌ failed to get network interfaces: %w", err)
+	}
+
+	var candidates []net.Interface
+
+	// Step 1: Filter interfaces that are up and not excluded
+	for _, iface := range all_interfaces {
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		if is_excluded_interface(iface.Name, excluded_keywords) {
+			continue
+		}
+		candidates = append(candidates, iface)
+	}
+
+	// Step 2: Try preferred keywords
+	for _, keyword := range preferred_keywords {
+		for _, iface := range candidates {
+			if strings.Contains(strings.ToLower(iface.Name), strings.ToLower(keyword)) {
+				ip, err := get_ipv4_from_interface(iface)
+				if err == nil && ip != "" {
+					return ip, nil
+				}
+			}
+		}
+	}
+
+	// Step 3: Fallback to any remaining candidate
+	for _, iface := range candidates {
+		ip, err := get_ipv4_from_interface(iface)
+		if err == nil && ip != "" {
+			return ip, nil
+		}
+	}
+
+	return "", nil
+}
+
+// get_ipv4_from_interface extracts the first usable IPv4 address from a network interface.
+func get_ipv4_from_interface(iface net.Interface) (string, error) {
+	addresses, err := iface.Addrs()
+	if err != nil {
+		return "", err
+	}
+	for _, addr := range addresses {
+		var ip net.IP
+		switch v := addr.(type) {
+		case *net.IPNet:
+			ip = v.IP
+		case *net.IPAddr:
+			ip = v.IP
+		}
+		if ip != nil && ip.To4() != nil && !ip.IsLoopback() && !ip.IsUnspecified() && !ip.IsLinkLocalUnicast() {
+			return ip.String(), nil
+		}
+	}
+	return "", nil
+}
+
+// is_excluded_interface checks if an interface name matches any excluded keywords.
+func is_excluded_interface(interface_name string, excluded_keywords []string) bool {
+	lower_name := strings.ToLower(interface_name)
+	for _, keyword := range excluded_keywords {
+		if strings.Contains(lower_name, strings.ToLower(keyword)) {
+			return true
+		}
+	}
+	return false
 }
