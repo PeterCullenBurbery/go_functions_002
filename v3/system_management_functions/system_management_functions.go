@@ -2063,3 +2063,40 @@ func is_excluded_interface(interface_name string, excluded_keywords []string) bo
 	}
 	return false
 }
+
+// Restart_file_explorer uses PowerShell to stop and restart Windows File Explorer,
+// and waits until explorer.exe is running again.
+func Restart_file_explorer() error {
+	log.Println("🔄 Stopping Explorer via PowerShell...")
+
+	cmdKill := exec.Command("powershell.exe", "-Command", `Stop-Process -Name explorer -Force`)
+	if err := cmdKill.Run(); err != nil {
+		log.Printf("❌ Failed to stop Explorer via PowerShell: %v", err)
+		return err
+	}
+
+	time.Sleep(1 * time.Second)
+
+	log.Println("🚀 Starting Explorer via PowerShell...")
+
+	cmdStart := exec.Command("powershell.exe", "-Command", `Start-Process explorer.exe`)
+	if err := cmdStart.Run(); err != nil {
+		log.Printf("❌ Failed to start Explorer via PowerShell: %v", err)
+		return err
+	}
+
+	log.Println("⏳ Waiting for Explorer to relaunch...")
+
+	// Poll for explorer.exe to appear again
+	for i := 0; i < 10; i++ {
+		cmdCheck := exec.Command("powershell.exe", "-Command", `Get-Process explorer -ErrorAction SilentlyContinue`)
+		if err := cmdCheck.Run(); err == nil {
+			log.Println("✅ Explorer process is running.")
+			return nil
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	log.Println("⚠️ Timeout: Explorer process did not appear.")
+	return nil
+}
