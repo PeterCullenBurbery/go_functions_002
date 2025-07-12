@@ -5,17 +5,16 @@ package system_management_functions
 import (
 	"archive/zip"
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
-	"net/http"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"net/http"
 	"strings"
 	"syscall"
 	"time"
@@ -23,8 +22,8 @@ import (
 
 	"github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
-	yekazip "github.com/yeka/zip"
 	"golang.org/x/sys/windows/registry"
+	yekazip "github.com/yeka/zip"
 )
 
 // Install_choco installs Chocolatey using the official PowerShell script.
@@ -224,11 +223,10 @@ func Winget_install(package_name string, package_id string) error {
 //   - An error if the download, file creation, or writing fails; otherwise, nil.
 //
 // Example:
-//
-//	err := Download_file("C:\\downloads\\example.exe", "https://example.com/file.exe")
-//	if err != nil {
-//	    log.Fatalf("Download failed: %v", err)
-//	}
+//   err := Download_file("C:\\downloads\\example.exe", "https://example.com/file.exe")
+//   if err != nil {
+//       log.Fatalf("Download failed: %v", err)
+//   }
 func Download_file(destination_path string, url string) error {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -1307,11 +1305,11 @@ func Reset_long_date_pattern() error {
 // - Separator:  "."
 func Set_time_pattern() error {
 	const (
-		keyPath      = `Control Panel\International`
-		sTimeFormat  = "HH.mm.ss"
-		sShortTime   = "HH.mm.ss"
-		sTime        = "."
-		broadcastMsg = "Intl"
+		keyPath       = `Control Panel\International`
+		sTimeFormat   = "HH.mm.ss"
+		sShortTime    = "HH.mm.ss"
+		sTime         = "."
+		broadcastMsg  = "Intl"
 	)
 
 	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
@@ -1366,8 +1364,8 @@ func Set_time_pattern() error {
 func Reset_time_pattern() error {
 	const (
 		keyPath           = `Control Panel\International`
-		defaultTimeFormat = "HH:mm:ss" // Long time
-		defaultShortTime  = "h:mm tt"  // Short time
+		defaultTimeFormat = "HH:mm:ss"   // Long time
+		defaultShortTime  = "h:mm tt"    // Short time
 		defaultSeparator  = ":"
 		broadcastMsg      = "Intl"
 	)
@@ -1423,7 +1421,7 @@ func Reset_time_pattern() error {
 // Set_24_hour_format configures Windows to use 24-hour time by setting iTime = 1.
 func Set_24_hour_format() error {
 	const (
-		keyPath      = `Control Panel\International`
+		keyPath = `Control Panel\International`
 		broadcastMsg = "Intl"
 	)
 
@@ -1468,7 +1466,7 @@ func Set_24_hour_format() error {
 // Do_not_use_24_hour_format configures Windows to use 12-hour time by setting iTime = 0.
 func Do_not_use_24_hour_format() error {
 	const (
-		keyPath      = `Control Panel\International`
+		keyPath = `Control Panel\International`
 		broadcastMsg = "Intl"
 	)
 
@@ -1549,23 +1547,20 @@ func Set_first_day_of_week_Sunday() error {
 // Convert_blob_to_raw_github_url transforms a GitHub "blob" URL into a "raw" content URL.
 //
 // GitHub's web interface often shows files using a URL like:
-//
-//	https://github.com/{user}/{repo}/blob/{branch}/{path/to/file}
+//   https://github.com/{user}/{repo}/blob/{branch}/{path/to/file}
 //
 // But to access the raw file directly through GitHub (still using the github.com domain),
 // the equivalent raw content URL is:
-//
-//	https://github.com/{user}/{repo}/raw/{branch}/{path/to/file}
+//   https://github.com/{user}/{repo}/raw/{branch}/{path/to/file}
 //
 // This function performs the necessary transformation by replacing the "/blob/" segment
 // in the URL with "/raw/".
 //
 // For example:
-//
-//	Input:
-//	  https://github.com/user/repo/blob/main/script.ps1
-//	Output:
-//	  https://github.com/user/repo/raw/main/script.ps1
+//   Input:
+//     https://github.com/user/repo/blob/main/script.ps1
+//   Output:
+//     https://github.com/user/repo/raw/main/script.ps1
 //
 // Parameters:
 //   - blob_url: the GitHub "blob" URL to convert
@@ -1984,11 +1979,11 @@ func Set_system_environment_variable(variable_name string, variable_value string
 // "VMware", "Virtual", "Bluetooth", "Loopback", "OpenVPN", or "Disconnected".
 //
 // The function performs the following steps:
-//  1. Lists all active, non-loopback interfaces.
-//  2. Filters out interfaces matching any excluded keywords.
-//  3. Searches for an interface whose name contains a preferred keyword.
-//  4. Falls back to any remaining valid interface if no preferred one is found.
-//  5. Returns the first usable IPv4 address found.
+//   1. Lists all active, non-loopback interfaces.
+//   2. Filters out interfaces matching any excluded keywords.
+//   3. Searches for an interface whose name contains a preferred keyword.
+//   4. Falls back to any remaining valid interface if no preferred one is found.
+//   5. Returns the first usable IPv4 address found.
 //
 // Returns the IPv4 address as a string, or an empty string if none are found.
 // If an error occurs while listing interfaces, it is returned.
@@ -2104,118 +2099,4 @@ func Restart_file_explorer() error {
 
 	log.Println("⚠️ Timeout: Explorer process did not appear.")
 	return nil
-}
-
-// PowershellVersionDetails represents the output of Get-PowerShellVersionDetails
-type PowershellVersionDetails struct {
-	PSVersion         string `json:"PSVersion"`
-	PSEdition         string `json:"PSEdition"`
-	MajorVersion      int    `json:"MajorVersion"`
-	ParallelSupported bool   `json:"ParallelSupported"`
-	TernarySupported  bool   `json:"TernarySupported"`
-	NullCoalescing    bool   `json:"NullCoalescing"`
-	PipelineChain     bool   `json:"PipelineChain"`
-	PSStyleAvailable  bool   `json:"PSStyleAvailable"`
-	GetErrorAvailable bool   `json:"GetErrorAvailable"`
-	Conclusion        string `json:"Conclusion"`
-}
-
-// Get_powershell_version executes a PowerShell script to get version details
-func Get_powershell_version() (*PowershellVersionDetails, error) {
-	psScript := `
-function Get-PowerShellVersionDetails {
-    [OutputType([pscustomobject])]
-    param ()
-
-    $results = [ordered]@{}
-
-    $results['PSVersion']         = $PSVersionTable.PSVersion.ToString()
-    $results['PSEdition']         = $PSVersionTable.PSEdition
-    $results['MajorVersion']      = $PSVersionTable.PSVersion.Major
-    $results['ParallelSupported'] = $false
-    $results['TernarySupported']  = $false
-    $results['NullCoalescing']    = $false
-    $results['PipelineChain']     = $false
-    $results['PSStyleAvailable']  = $false
-    $results['GetErrorAvailable'] = $false
-
-    try {
-        $output = 1..2 | ForEach-Object -Parallel { $_ * 2 }
-        if (($output -join ',') -eq '2,4') {
-            $results['ParallelSupported'] = $true
-        }
-    } catch {}
-
-    try {
-        $ternaryTest = Invoke-Expression '[bool]$x = $true; $x ? "yes" : "no"'
-        if ($ternaryTest -eq 'yes') {
-            $results['TernarySupported'] = $true
-        }
-    } catch {}
-
-    try {
-        $nullCoalesce = Invoke-Expression '$null ?? "fallback"'
-        if ($nullCoalesce -eq 'fallback') {
-            $results['NullCoalescing'] = $true
-        }
-    } catch {}
-
-    try {
-        $pipelineTest = Invoke-Expression '1..1 | ForEach-Object { "ok" } && "yes"'
-        if ($pipelineTest -match 'yes') {
-            $results['PipelineChain'] = $true
-        }
-    } catch {}
-
-    try {
-        if ($null -ne $PSStyle) {
-            $results['PSStyleAvailable'] = $true
-        }
-    } catch {}
-
-    try {
-        if (Get-Command Get-Error -ErrorAction SilentlyContinue) {
-            $results['GetErrorAvailable'] = $true
-        }
-    } catch {}
-
-    $results['Conclusion'] = if (
-        $results['PSEdition'] -eq 'Core' -or
-        $results['MajorVersion'] -ge 7 -or
-        $results['ParallelSupported'] -or
-        $results['TernarySupported'] -or
-        $results['NullCoalescing'] -or
-        $results['PipelineChain'] -or
-        $results['PSStyleAvailable'] -or
-        $results['GetErrorAvailable']
-    ) {
-        "✅ PowerShell 7+ (Core)"
-    } elseif (
-        $results['PSEdition'] -eq 'Desktop' -and
-        $results['MajorVersion'] -eq 5
-    ) {
-        "🖥️ Windows PowerShell 5.1 (Desktop)"
-    } else {
-        "❓ Unknown or unsupported PowerShell version"
-    }
-
-    [pscustomobject]$results | ConvertTo-Json -Compress
-}
-Get-PowerShellVersionDetails
-`
-
-	cmd := exec.Command("powershell", "-NoProfile", "-Command", psScript)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("PowerShell execution failed: %v", err)
-	}
-
-	var details PowershellVersionDetails
-	if err := json.Unmarshal(out.Bytes(), &details); err != nil {
-		return nil, fmt.Errorf("failed to parse JSON: %v\nOutput: %s", err, out.String())
-	}
-
-	return &details, nil
 }
