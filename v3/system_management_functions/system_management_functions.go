@@ -2100,3 +2100,50 @@ func Restart_file_explorer() error {
 	log.Println("⚠️ Timeout: Explorer process did not appear.")
 	return nil
 }
+
+// Get_file_size returns the size in bytes of the specified path.
+// If the path is a regular file, its size is returned directly.
+// If the path is a directory, the function walks through all files
+// and returns the cumulative size of all non-directory files within it.
+//
+// Parameters:
+//   - path: The path to the file or directory.
+//
+// Returns:
+//   - int64: Total size in bytes.
+//   - error: Any error encountered while accessing the file system.
+//
+// Example:
+//   size, err := Get_file_size("C:\\Users\\Administrator\\Desktop")
+//   if err != nil {
+//       log.Fatal(err)
+//   }
+//   fmt.Println("Total size:", size)
+func Get_file_size(path string) (int64, error) {
+	var totalSize int64
+
+	info, err := os.Stat(path)
+	if err != nil {
+		return 0, err
+	}
+
+	if !info.IsDir() {
+		return info.Size(), nil
+	}
+
+	err = filepath.Walk(path, func(_ string, fileInfo os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !fileInfo.IsDir() {
+			totalSize += fileInfo.Size()
+		}
+		return nil
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	return totalSize, nil
+}
