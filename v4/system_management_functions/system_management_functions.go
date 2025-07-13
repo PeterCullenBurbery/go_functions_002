@@ -2147,3 +2147,57 @@ func Get_file_size(path string) (int64, error) {
 
 	return totalSize, nil
 }
+
+// Get_file_size_human_readable returns the size of a file or directory at the given path
+// in a human-readable string format with three decimal places of precision.
+//
+// The function supports size units in ascending order:
+// - bytes
+// - KB (Kilobytes)
+// - MB (Megabytes)
+// - GB (Gigabytes)
+// - TB (Terabytes)
+//
+// For files, the function directly returns the file size in the most appropriate unit.
+// For directories, it recursively calculates the total size of all non-directory files inside.
+//
+// Parameters:
+//   - path: The file or directory path as a string.
+//
+// Returns:
+//   - string: A formatted string representing the human-readable size (e.g., "123.456 MB").
+//   - error: An error if the path does not exist or cannot be read.
+//
+// Example:
+//   sizeStr, err := Get_file_size_human_readable("C:\\Users\\Administrator\\Desktop")
+//   if err != nil {
+//       log.Fatal(err)
+//   }
+//   fmt.Println("Size:", sizeStr)
+func Get_file_size_human_readable(path string) (string, error) {
+	size, err := Get_file_size(path)
+	if err != nil {
+		return "", err
+	}
+
+	const (
+		_          = iota
+		kilobyte   = 1 << (10 * iota)
+		megabyte
+		gigabyte
+		terabyte
+	)
+
+	switch {
+	case size >= terabyte:
+		return fmt.Sprintf("%.3f TB", float64(size)/float64(terabyte)), nil
+	case size >= gigabyte:
+		return fmt.Sprintf("%.3f GB", float64(size)/float64(gigabyte)), nil
+	case size >= megabyte:
+		return fmt.Sprintf("%.3f MB", float64(size)/float64(megabyte)), nil
+	case size >= kilobyte:
+		return fmt.Sprintf("%.3f KB", float64(size)/float64(kilobyte)), nil
+	default:
+		return fmt.Sprintf("%d bytes", size), nil
+	}
+}
