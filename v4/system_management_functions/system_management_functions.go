@@ -2202,6 +2202,17 @@ func Get_file_size_human_readable(path string) (string, error) {
 	}
 }
 
+// Bring_back_the_right_click_menu enables the classic Windows 10-style
+// context menu in Windows 11 by setting a specific registry key.
+//
+// It creates the following key in the current user registry hive:
+//   HKEY_CURRENT_USER\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32
+// and sets its default value to an empty string.
+//
+// After applying the registry modification, the function restarts
+// Windows File Explorer using the Restart_file_explorer function to apply the change.
+//
+// Returns an error if the registry key cannot be written or Explorer fails to restart.
 func Bring_back_the_right_click_menu() error {
 	const keyPath = `Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32`
 
@@ -2220,6 +2231,45 @@ func Bring_back_the_right_click_menu() error {
 	log.Println("✅ Right-click menu registry tweak applied.")
 
 	// Restart File Explorer to apply changes
+	if err := Restart_file_explorer(); err != nil {
+		return fmt.Errorf("failed to restart Explorer: %w", err)
+	}
+
+	return nil
+}
+
+// Use_Windows_11_right_click_menu restores the default Windows 11-style
+// right-click context menu by removing a specific registry override.
+//
+// It deletes the following keys from the current user registry hive:
+//   HKEY_CURRENT_USER\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}
+//   HKEY_CURRENT_USER\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32
+//
+// These keys are used to force the classic Windows 10-style context menu in Windows 11.
+// Removing them reverts Explorer to its default behavior.
+//
+// After deleting the registry keys, the function restarts Windows File Explorer
+// via Restart_file_explorer to apply the change.
+//
+// Returns an error if any key deletion fails (unless the key doesn't exist),
+// or if restarting Explorer fails.
+func Use_Windows_11_right_click_menu() error {
+	const baseKeyPath = `Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}`
+
+	// Delete the entire CLSID key to revert to the Windows 11 context menu
+	err := registry.DeleteKey(registry.CURRENT_USER, baseKeyPath+`\InprocServer32`)
+	if err != nil && err != syscall.ERROR_FILE_NOT_FOUND {
+		return fmt.Errorf("failed to delete InprocServer32 subkey: %w", err)
+	}
+
+	err = registry.DeleteKey(registry.CURRENT_USER, baseKeyPath)
+	if err != nil && err != syscall.ERROR_FILE_NOT_FOUND {
+		return fmt.Errorf("failed to delete CLSID key: %w", err)
+	}
+
+	log.Println("🔄 Restored Windows 11 right-click menu by removing registry override.")
+
+	// Restart Explorer to apply the change
 	if err := Restart_file_explorer(); err != nil {
 		return fmt.Errorf("failed to restart Explorer: %w", err)
 	}
