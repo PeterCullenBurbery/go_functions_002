@@ -2201,3 +2201,28 @@ func Get_file_size_human_readable(path string) (string, error) {
 		return fmt.Sprintf("%d bytes", size), nil
 	}
 }
+
+func Bring_back_the_right_click_menu() error {
+	const keyPath = `Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32`
+
+	// Open or create the registry key
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, keyPath, registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("failed to create/open registry key: %w", err)
+	}
+	defer key.Close()
+
+	// Set the default value to an empty string
+	if err := key.SetStringValue("", ""); err != nil {
+		return fmt.Errorf("failed to set registry value: %w", err)
+	}
+
+	log.Println("✅ Right-click menu registry tweak applied.")
+
+	// Restart File Explorer to apply changes
+	if err := Restart_file_explorer(); err != nil {
+		return fmt.Errorf("failed to restart Explorer: %w", err)
+	}
+
+	return nil
+}
