@@ -2309,7 +2309,6 @@ func Enable_long_file_paths() error {
 	}
 
 	fmt.Println("✅ Long file paths have been enabled (LongPathsEnabled = 1).")
-	fmt.Println("🔁 You must restart the system for this change to take effect.")
 
 	return nil
 }
