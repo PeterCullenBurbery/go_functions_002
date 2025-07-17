@@ -2276,3 +2276,40 @@ func Use_Windows_11_right_click_menu() error {
 
 	return nil
 }
+
+// Enable_long_file_paths enables long file path support in Windows by setting
+// LongPathsEnabled=1 under HKLM\SYSTEM\CurrentControlSet\Control\FileSystem.
+// It first checks the current value and only modifies the registry if needed.
+// Administrator privileges are required to modify the setting.
+func Enable_long_file_paths() error {
+	const registryPath = `SYSTEM\CurrentControlSet\Control\FileSystem`
+	const valueName = "LongPathsEnabled"
+
+	// Try to open the registry key with read and write access
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE, registryPath, registry.READ|registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open registry key (requires Admin): %w", err)
+	}
+	defer key.Close()
+
+	// Read current value
+	currentVal, _, err := key.GetIntegerValue(valueName)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to read current value of %s: %w", valueName, err)
+	}
+
+	if currentVal == 1 {
+		fmt.Println("ℹ️ Long file paths are already enabled (LongPathsEnabled = 1).")
+		return nil
+	}
+
+	// Set the value if it's not already enabled
+	if err := key.SetDWordValue(valueName, 1); err != nil {
+		return fmt.Errorf("❌ Failed to set %s = 1: %w", valueName, err)
+	}
+
+	fmt.Println("✅ Long file paths have been enabled (LongPathsEnabled = 1).")
+	fmt.Println("🔁 You must restart the system for this change to take effect.")
+
+	return nil
+}
