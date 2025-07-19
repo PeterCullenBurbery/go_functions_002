@@ -2312,3 +2312,24 @@ func Enable_long_file_paths() error {
 
 	return nil
 }
+
+// Are_long_file_paths_enabled checks if long file path support is currently enabled.
+// It returns true if LongPathsEnabled == 1, false otherwise.
+// Returns an error if the registry cannot be read (e.g., due to insufficient privileges).
+func Are_long_file_paths_enabled() (bool, error) {
+	const registryPath = `SYSTEM\CurrentControlSet\Control\FileSystem`
+	const valueName = "LongPathsEnabled"
+
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE, registryPath, registry.READ)
+	if err != nil {
+		return false, fmt.Errorf("❌ Failed to open registry key: %w", err)
+	}
+	defer key.Close()
+
+	currentVal, _, err := key.GetIntegerValue(valueName)
+	if err != nil {
+		return false, fmt.Errorf("❌ Failed to read registry value: %w", err)
+	}
+
+	return currentVal == 1, nil
+}
