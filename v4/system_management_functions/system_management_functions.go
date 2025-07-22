@@ -610,17 +610,41 @@ func Extract_zip(src, dest string) error {
 	return nil
 }
 
-// Exclude_from_Microsoft_Windows_Defender excludes the given file or folder from Microsoft Defender.
+// Exclude_from_Microsoft_Windows_Defender attempts to exclude the specified file or folder
+// from Microsoft Defender's real-time protection.
 //
-// If a file is given, its parent folder is excluded instead.
-// This requires administrator privileges.
+// This function first checks whether the Microsoft Defender Antivirus service (WinDefend)
+// is currently running. If it is not running (e.g., disabled by policy or replaced by another
+// antivirus solution), the function skips the exclusion step without error.
+//
+// If the provided path refers to a file, its parent directory is excluded instead.
+// If the path refers to a directory, it is used directly.
+//
+// This operation requires administrative privileges if Microsoft Defender is enabled.
 //
 // Parameters:
-//   - path_to_exclude: Absolute path to a file or folder to exclude.
+//   - path_to_exclude: The absolute or relative path to a file or folder to exclude.
 //
 // Returns:
-//   - An error if exclusion fails; nil otherwise.
+//   - nil if the exclusion was successful, unnecessary (because Defender is not running),
+//     or if the path was already excluded.
+//   - An error if any part of the exclusion process fails (e.g., bad path, PowerShell failure).
+//
+// Example:
+//
+//	err := Exclude_from_Microsoft_Windows_Defender("C:\\downloads\\nirsoft")
+//	if err != nil {
+//	    log.Fatalf("Failed to exclude: %v", err)
+//	}
 func Exclude_from_Microsoft_Windows_Defender(path_to_exclude string) error {
+	// Step 0: Check if WinDefend is running
+	checkCmd := exec.Command("powershell", "-NoProfile", "-Command",
+		`(Get-Service WinDefend).Status -eq 'Running'`)
+	if err := checkCmd.Run(); err != nil {
+		log.Println("ℹ️ Microsoft Defender is not running; skipping exclusion step.")
+		return nil
+	}
+
 	// Resolve absolute path
 	absPath, err := filepath.Abs(path_to_exclude)
 	if err != nil {
@@ -641,11 +665,11 @@ func Exclude_from_Microsoft_Windows_Defender(path_to_exclude string) error {
 	// Normalize (trim trailing slash)
 	normalizedPath := filepath.Clean(absPath)
 
-	// Build PowerShell command
-	cmd := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+	// Build PowerShell command to exclude from Defender
+	excludeCmd := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
 		fmt.Sprintf(`Add-MpPreference -ExclusionPath "%s"`, normalizedPath))
 
-	output, err := cmd.CombinedOutput()
+	output, err := excludeCmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("❌ Failed to exclude from Defender: %w\nOutput: %s", err, string(output))
 	}
