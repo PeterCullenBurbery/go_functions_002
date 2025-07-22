@@ -638,43 +638,43 @@ func Extract_zip(src, dest string) error {
 //	}
 func Exclude_from_Microsoft_Windows_Defender(path_to_exclude string) error {
 	// Step 0: Check if WinDefend is running
-	checkCmd := exec.Command("powershell", "-NoProfile", "-Command",
+	check_cmd := exec.Command("powershell", "-NoProfile", "-Command",
 		`(Get-Service WinDefend).Status -eq 'Running'`)
-	if err := checkCmd.Run(); err != nil {
+	if err := check_cmd.Run(); err != nil {
 		log.Println("ℹ️ Microsoft Defender is not running; skipping exclusion step.")
 		return nil
 	}
 
 	// Resolve absolute path
-	absPath, err := filepath.Abs(path_to_exclude)
+	absolute_path, err := filepath.Abs(path_to_exclude)
 	if err != nil {
 		return fmt.Errorf("❌ Failed to resolve absolute path: %w", err)
 	}
 
 	// Stat to determine if it's a file or folder
-	info, err := os.Stat(absPath)
+	file_info, err := os.Stat(absolute_path)
 	if err != nil {
 		return fmt.Errorf("❌ Failed to stat path: %w", err)
 	}
 
 	// If it's a file, get parent directory
-	if !info.IsDir() {
-		absPath = filepath.Dir(absPath)
+	if !file_info.IsDir() {
+		absolute_path = filepath.Dir(absolute_path)
 	}
 
 	// Normalize (trim trailing slash)
-	normalizedPath := filepath.Clean(absPath)
+	normalized_path := filepath.Clean(absolute_path)
 
 	// Build PowerShell command to exclude from Defender
-	excludeCmd := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
-		fmt.Sprintf(`Add-MpPreference -ExclusionPath "%s"`, normalizedPath))
+	exclude_cmd := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+		fmt.Sprintf(`Add-MpPreference -ExclusionPath "%s"`, normalized_path))
 
-	output, err := excludeCmd.CombinedOutput()
+	output, err := exclude_cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("❌ Failed to exclude from Defender: %w\nOutput: %s", err, string(output))
 	}
 
-	fmt.Printf("✅ Excluded from Microsoft Defender: %s\n", normalizedPath)
+	fmt.Printf("✅ Excluded from Microsoft Defender: %s\n", normalized_path)
 	return nil
 }
 
