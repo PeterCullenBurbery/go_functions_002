@@ -395,15 +395,16 @@ func Add_to_path(path_to_add string) error {
 }
 
 // Remove_from_path removes the given path from the system PATH if present.
-// It normalizes the path, modifies HKLM registry, and broadcasts environment changes.
+// It normalizes the path, modifies HKLM registry, broadcasts environment changes,
+// and advises the user to refresh the session if 'refreshenv' is available.
 func Remove_from_path(path_to_remove string) error {
-	// Resolve to absolute path
+	// Step 1: Resolve absolute path
 	absPath, err := filepath.Abs(path_to_remove)
 	if err != nil {
 		return fmt.Errorf("❌ Failed to resolve absolute path: %w", err)
 	}
 
-	// If it's a file, get parent directory
+	// If it's a file, use its directory
 	info, err := os.Stat(absPath)
 	if err != nil {
 		return fmt.Errorf("❌ Failed to stat path: %w", err)
@@ -411,9 +412,11 @@ func Remove_from_path(path_to_remove string) error {
 	if !info.IsDir() {
 		absPath = filepath.Dir(absPath)
 	}
-	normalizedPath := strings.TrimRight(absPath, `\`)
+	normalized := strings.TrimRight(absPath, `\`)
+	normalizedLower := strings.ToLower(normalized)
+	fmt.Printf("🔧 Normalized path to remove: %s\n", normalized)
 
-	// Open system environment key
+	// Step 2: Open system PATH from registry
 	key, err := registry.OpenKey(registry.LOCAL_MACHINE,
 		`SYSTEM\CurrentControlSet\Control\Session Manager\Environment`,
 		registry.QUERY_VALUE|registry.SET_VALUE)
@@ -422,37 +425,47 @@ func Remove_from_path(path_to_remove string) error {
 	}
 	defer key.Close()
 
-	// Get current PATH
+	// Step 3: Read and process PATH
 	currentPath, _, err := key.GetStringValue("Path")
 	if err != nil {
 		return fmt.Errorf("❌ Failed to read PATH: %w", err)
 	}
-
 	entries := strings.Split(currentPath, ";")
-	normalizedEntries := make([]string, 0, len(entries))
-	found := false
+	newEntries := make([]string, 0, len(entries))
+	removed := false
+
+	fmt.Println("🔍 Checking each PATH entry for removal match:")
 
 	for _, entry := range entries {
-		trimmed := strings.TrimRight(entry, `\`)
-		if strings.EqualFold(trimmed, normalizedPath) {
-			found = true
+		entryTrimmed := strings.TrimSpace(strings.TrimRight(entry, `\`))
+		if entryTrimmed == "" {
 			continue
 		}
-		normalizedEntries = append(normalizedEntries, entry)
+		expanded := strings.TrimRight(Expand_windows_env(entryTrimmed), `\`)
+		lowerExpanded := strings.ToLower(expanded)
+
+		if lowerExpanded == normalizedLower {
+			fmt.Printf("❌ Removing entry: %s (expanded to %s)\n", entryTrimmed, expanded)
+			removed = true
+			continue
+		}
+
+		newEntries = append(newEntries, entryTrimmed)
 	}
 
-	if !found {
+	if !removed {
 		fmt.Println("ℹ️ Path not found in system PATH.")
 		return nil
 	}
 
-	newPath := strings.Join(normalizedEntries, ";")
+	// Step 4: Write updated PATH back to registry
+	newPath := strings.Join(newEntries, ";")
 	if err := key.SetStringValue("Path", newPath); err != nil {
 		return fmt.Errorf("❌ Failed to update PATH in registry: %w", err)
 	}
-	fmt.Printf("✅ Path '%s' removed from system PATH.\n", normalizedPath)
+	fmt.Printf("✅ Path '%s' removed from system PATH.\n", normalized)
 
-	// Broadcast environment change
+	// Step 5: Broadcast environment change
 	const (
 		HWND_BROADCAST   = 0xffff
 		WM_SETTINGCHANGE = 0x001A
@@ -476,6 +489,14 @@ func Remove_from_path(path_to_remove string) error {
 		fmt.Println("⚠️ Environment change broadcast may have failed.")
 	} else {
 		fmt.Println("📢 Environment update broadcast sent.")
+	}
+
+	// Step 6: Check for refreshenv and advise user
+	if _, err := exec.LookPath("refreshenv"); err == nil {
+		fmt.Println("♻️  'refreshenv' is available. To update this session, run:")
+		fmt.Println("    refreshenv")
+	} else {
+		fmt.Println("ℹ️  'refreshenv' not available in this session.")
 	}
 
 	return nil
