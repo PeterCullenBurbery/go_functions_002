@@ -632,50 +632,56 @@ func Extract_zip(src, dest string) error {
 //
 // Example:
 //
-//	err := Exclude_from_Microsoft_Windows_Defender("C:\\downloads\\nirsoft")
-//	if err != nil {
-//	    log.Fatalf("Failed to exclude: %v", err)
-//	}
+//      err := Exclude_from_Microsoft_Windows_Defender("C:\\downloads\\nirsoft")
+//      if err != nil {
+//          log.Fatalf("Failed to exclude: %v", err)
+//      }
 func Exclude_from_Microsoft_Windows_Defender(path_to_exclude string) error {
-	// Step 0: Check if WinDefend is running
-	check_cmd := exec.Command("powershell", "-NoProfile", "-Command",
-		`(Get-Service WinDefend).Status -eq 'Running'`)
-	if err := check_cmd.Run(); err != nil {
-		log.Println("ℹ️ Microsoft Defender is not running; skipping exclusion step.")
-		return nil
-	}
+        // Step 0: Check if Microsoft Defender is running
+        check_cmd := exec.Command("powershell", "-NoProfile", "-Command",
+                `(Get-Service WinDefend).Status`)
+        output_bytes, err := check_cmd.Output()
+        if err != nil {
+                log.Println("ℹ️ Unable to query WinDefend service; skipping exclusion step.")
+                return nil
+        }
+        output := string(output_bytes)
+        if output != "Running\r\n" && output != "Running\n" {
+                log.Println("ℹ️ Microsoft Defender is not running; skipping exclusion step.")
+                return nil
+        }
 
-	// Resolve absolute path
-	absolute_path, err := filepath.Abs(path_to_exclude)
-	if err != nil {
-		return fmt.Errorf("❌ Failed to resolve absolute path: %w", err)
-	}
+        // Resolve absolute path
+        absolute_path, err := filepath.Abs(path_to_exclude)
+        if err != nil {
+                return fmt.Errorf("❌ Failed to resolve absolute path: %w", err)
+        }
 
-	// Stat to determine if it's a file or folder
-	file_info, err := os.Stat(absolute_path)
-	if err != nil {
-		return fmt.Errorf("❌ Failed to stat path: %w", err)
-	}
+        // Stat to determine if it's a file or folder
+        file_info, err := os.Stat(absolute_path)
+        if err != nil {
+                return fmt.Errorf("❌ Failed to stat path: %w", err)
+        }
 
-	// If it's a file, get parent directory
-	if !file_info.IsDir() {
-		absolute_path = filepath.Dir(absolute_path)
-	}
+        // If it's a file, get parent directory
+        if !file_info.IsDir() {
+                absolute_path = filepath.Dir(absolute_path)
+        }
 
-	// Normalize (trim trailing slash)
-	normalized_path := filepath.Clean(absolute_path)
+        // Normalize (trim trailing slash)
+        normalized_path := filepath.Clean(absolute_path)
 
-	// Build PowerShell command to exclude from Defender
-	exclude_cmd := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
-		fmt.Sprintf(`Add-MpPreference -ExclusionPath "%s"`, normalized_path))
+        // Build PowerShell command to exclude from Defender
+        exclude_cmd := exec.Command("powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+                fmt.Sprintf(`Add-MpPreference -ExclusionPath "%s"`, normalized_path))
 
-	output, err := exclude_cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("❌ Failed to exclude from Defender: %w\nOutput: %s", err, string(output))
-	}
+        exclude_output_bytes, err := exclude_cmd.CombinedOutput()
+        if err != nil {
+                return fmt.Errorf("❌ Failed to exclude from Defender: %w\nOutput: %s", err, string(exclude_output_bytes))
+        }
 
-	fmt.Printf("✅ Excluded from Microsoft Defender: %s\n", normalized_path)
-	return nil
+        fmt.Printf("✅ Excluded from Microsoft Defender: %s\n", normalized_path)
+        return nil
 }
 
 // Extract_password_protected_zip extracts a password-protected ZIP archive using AES or ZipCrypto.
