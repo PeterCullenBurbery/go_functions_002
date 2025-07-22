@@ -516,6 +516,14 @@ func Create_desktop_shortcut(target_path, shortcut_name, description string, win
 	if all_users {
 		public := os.Getenv("PUBLIC")
 		desktopPath = filepath.Join(public, "Desktop")
+
+		// Ensure the Public Desktop folder exists
+		if _, err := os.Stat(desktopPath); os.IsNotExist(err) {
+			fmt.Printf("📁 Public Desktop missing — creating: %s\n", desktopPath)
+			if err := os.MkdirAll(desktopPath, 0755); err != nil {
+				return fmt.Errorf("❌ Failed to create Public Desktop folder: %w", err)
+			}
+		}
 	} else {
 		usr, err := user.Current()
 		if err != nil {
@@ -524,13 +532,20 @@ func Create_desktop_shortcut(target_path, shortcut_name, description string, win
 		desktopPath = filepath.Join(usr.HomeDir, "Desktop")
 	}
 
-	// Determine shortcut name
+	// Determine shortcut name if empty
 	if shortcut_name == "" {
 		base := filepath.Base(target_path)
-		shortcut_name = strings.TrimSuffix(base, ".exe") + ".lnk"
+		shortcut_name = strings.TrimSuffix(base, filepath.Ext(base)) + ".lnk"
 	}
 
+	// Final shortcut path
 	shortcutPath := filepath.Join(desktopPath, shortcut_name)
+
+	// Log input info
+	fmt.Printf("📄 Creating shortcut:\n")
+	fmt.Printf("   📁 Target Path: %s\n", target_path)
+	fmt.Printf("   📝 Shortcut Name: %s\n", shortcut_name)
+	fmt.Printf("   📂 Shortcut Path: %s\n", shortcutPath)
 
 	// Initialize COM
 	if err := ole.CoInitialize(0); err != nil {
@@ -560,15 +575,16 @@ func Create_desktop_shortcut(target_path, shortcut_name, description string, win
 	defer shortcut.Release()
 
 	// Set properties
-	_, _ = oleutil.PutProperty(shortcut, "TargetPath", target_path)
+	if _, err := oleutil.PutProperty(shortcut, "TargetPath", target_path); err != nil {
+		return fmt.Errorf("❌ Failed to set TargetPath: %w", err)
+	}
 	_, _ = oleutil.PutProperty(shortcut, "WorkingDirectory", filepath.Dir(target_path))
 	_, _ = oleutil.PutProperty(shortcut, "WindowStyle", window_style)
 	_, _ = oleutil.PutProperty(shortcut, "Description", description)
 	_, _ = oleutil.PutProperty(shortcut, "IconLocation", fmt.Sprintf("%s, 0", target_path))
 
-	// Save
-	_, err = oleutil.CallMethod(shortcut, "Save")
-	if err != nil {
+	// Save the shortcut
+	if _, err := oleutil.CallMethod(shortcut, "Save"); err != nil {
 		return fmt.Errorf("❌ Failed to save shortcut: %w", err)
 	}
 
