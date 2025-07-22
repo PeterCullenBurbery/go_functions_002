@@ -272,7 +272,7 @@ func Expand_windows_env(input string) string {
 
 // Add_to_path adds the given path to the top of the system PATH (HKLM) if not already present.
 // It expands environment variables, removes redundant entries (like %SystemRoot%), avoids duplicates,
-// and broadcasts the environment change to Explorer.
+// and broadcasts the environment change to Explorer. It also prints PowerShell instructions to refresh the session.
 func Add_to_path(path_to_add string) error {
 	fmt.Printf("🔧 Input path: %s\n", path_to_add)
 
@@ -381,6 +381,14 @@ func Add_to_path(path_to_add string) error {
 		fmt.Println("⚠️ Environment change broadcast may have failed.")
 	} else {
 		fmt.Println("📢 Environment update broadcast sent.")
+	}
+
+	// Step 6: Check for refreshenv and print accordingly
+	if _, err := exec.LookPath("refreshenv"); err == nil {
+		fmt.Println("♻️  'refreshenv' is available. To update this session, run:")
+		fmt.Println("    refreshenv")
+	} else {
+		fmt.Println("ℹ️  'refreshenv' not available in this session.")
 	}
 
 	return nil
