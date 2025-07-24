@@ -504,92 +504,111 @@ func Remove_from_path(path_to_remove string) error {
 
 // Create_desktop_shortcut creates a .lnk shortcut on the desktop.
 // It accepts the target path, shortcut name (optional), description (optional),
-// window style (3 = maximized), and allUsers flag.
+// window style (3 = maximized), and allUsers flag. It retries up to 100 times.
 func Create_desktop_shortcut(target_path, shortcut_name, description string, window_style int, all_users bool) error {
-	// Ensure target exists
-	if _, err := os.Stat(target_path); os.IsNotExist(err) {
-		return fmt.Errorf("❌ Target path does not exist: %s", target_path)
-	}
+	const maxRetries = 100
+	const retryDelay = 2 * time.Second
 
-	// Determine desktop path
-	var desktopPath string
-	if all_users {
-		public := os.Getenv("PUBLIC")
-		desktopPath = filepath.Join(public, "Desktop")
+	var lastErr error
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		fmt.Printf("🔁 Attempt %d to create shortcut...\n", attempt)
 
-		// Ensure the Public Desktop folder exists
-		if _, err := os.Stat(desktopPath); os.IsNotExist(err) {
-			fmt.Printf("📁 Public Desktop missing — creating: %s\n", desktopPath)
-			if err := os.MkdirAll(desktopPath, 0755); err != nil {
-				return fmt.Errorf("❌ Failed to create Public Desktop folder: %w", err)
+		lastErr = func() error {
+			// Ensure target exists
+			if _, err := os.Stat(target_path); os.IsNotExist(err) {
+				return fmt.Errorf("❌ Target path does not exist: %s", target_path)
 			}
+
+			// Determine desktop path
+			var desktopPath string
+			if all_users {
+				public := os.Getenv("PUBLIC")
+				desktopPath = filepath.Join(public, "Desktop")
+
+				// Ensure the Public Desktop folder exists
+				if _, err := os.Stat(desktopPath); os.IsNotExist(err) {
+					fmt.Printf("📁 Public Desktop missing — creating: %s\n", desktopPath)
+					if err := os.MkdirAll(desktopPath, 0755); err != nil {
+						return fmt.Errorf("❌ Failed to create Public Desktop folder: %w", err)
+					}
+				}
+			} else {
+				usr, err := user.Current()
+				if err != nil {
+					return fmt.Errorf("❌ Could not determine current user: %w", err)
+				}
+				desktopPath = filepath.Join(usr.HomeDir, "Desktop")
+			}
+
+			// Determine shortcut name if empty
+			if shortcut_name == "" {
+				base := filepath.Base(target_path)
+				shortcut_name = strings.TrimSuffix(base, filepath.Ext(base)) + ".lnk"
+			}
+
+			// Final shortcut path
+			shortcutPath := filepath.Join(desktopPath, shortcut_name)
+
+			// Log input info
+			fmt.Printf("📄 Creating shortcut:\n")
+			fmt.Printf("   📁 Target Path: %s\n", target_path)
+			fmt.Printf("   📝 Shortcut Name: %s\n", shortcut_name)
+			fmt.Printf("   📂 Shortcut Path: %s\n", shortcutPath)
+
+			// Initialize COM
+			if err := ole.CoInitialize(0); err != nil {
+				return fmt.Errorf("❌ Failed to initialize COM: %w", err)
+			}
+			defer ole.CoUninitialize()
+
+			// Create Shell COM object
+			shell, err := oleutil.CreateObject("WScript.Shell")
+			if err != nil {
+				return fmt.Errorf("❌ Failed to create WScript.Shell COM object: %w", err)
+			}
+			defer shell.Release()
+
+			dispatch, err := shell.QueryInterface(ole.IID_IDispatch)
+			if err != nil {
+				return fmt.Errorf("❌ Failed to get IDispatch: %w", err)
+			}
+			defer dispatch.Release()
+
+			// Create the shortcut
+			shortcutRaw, err := oleutil.CallMethod(dispatch, "CreateShortcut", shortcutPath)
+			if err != nil {
+				return fmt.Errorf("❌ Failed to create shortcut: %w", err)
+			}
+			shortcut := shortcutRaw.ToIDispatch()
+			defer shortcut.Release()
+
+			// Set properties
+			if _, err := oleutil.PutProperty(shortcut, "TargetPath", target_path); err != nil {
+				return fmt.Errorf("❌ Failed to set TargetPath: %w", err)
+			}
+			_, _ = oleutil.PutProperty(shortcut, "WorkingDirectory", filepath.Dir(target_path))
+			_, _ = oleutil.PutProperty(shortcut, "WindowStyle", window_style)
+			_, _ = oleutil.PutProperty(shortcut, "Description", description)
+			_, _ = oleutil.PutProperty(shortcut, "IconLocation", fmt.Sprintf("%s, 0", target_path))
+
+			// Save the shortcut
+			if _, err := oleutil.CallMethod(shortcut, "Save"); err != nil {
+				return fmt.Errorf("❌ Failed to save shortcut: %w", err)
+			}
+
+			fmt.Printf("✅ Shortcut created at: %s\n", shortcutPath)
+			return nil
+		}()
+
+		if lastErr == nil {
+			return nil
 		}
-	} else {
-		usr, err := user.Current()
-		if err != nil {
-			return fmt.Errorf("❌ Could not determine current user: %w", err)
-		}
-		desktopPath = filepath.Join(usr.HomeDir, "Desktop")
+
+		fmt.Printf("⚠️  Attempt %d failed: %v\n", attempt, lastErr)
+		time.Sleep(retryDelay)
 	}
 
-	// Determine shortcut name if empty
-	if shortcut_name == "" {
-		base := filepath.Base(target_path)
-		shortcut_name = strings.TrimSuffix(base, filepath.Ext(base)) + ".lnk"
-	}
-
-	// Final shortcut path
-	shortcutPath := filepath.Join(desktopPath, shortcut_name)
-
-	// Log input info
-	fmt.Printf("📄 Creating shortcut:\n")
-	fmt.Printf("   📁 Target Path: %s\n", target_path)
-	fmt.Printf("   📝 Shortcut Name: %s\n", shortcut_name)
-	fmt.Printf("   📂 Shortcut Path: %s\n", shortcutPath)
-
-	// Initialize COM
-	if err := ole.CoInitialize(0); err != nil {
-		return fmt.Errorf("❌ Failed to initialize COM: %w", err)
-	}
-	defer ole.CoUninitialize()
-
-	// Create Shell COM object
-	shell, err := oleutil.CreateObject("WScript.Shell")
-	if err != nil {
-		return fmt.Errorf("❌ Failed to create WScript.Shell COM object: %w", err)
-	}
-	defer shell.Release()
-
-	dispatch, err := shell.QueryInterface(ole.IID_IDispatch)
-	if err != nil {
-		return fmt.Errorf("❌ Failed to get IDispatch: %w", err)
-	}
-	defer dispatch.Release()
-
-	// Create the shortcut
-	shortcutRaw, err := oleutil.CallMethod(dispatch, "CreateShortcut", shortcutPath)
-	if err != nil {
-		return fmt.Errorf("❌ Failed to create shortcut: %w", err)
-	}
-	shortcut := shortcutRaw.ToIDispatch()
-	defer shortcut.Release()
-
-	// Set properties
-	if _, err := oleutil.PutProperty(shortcut, "TargetPath", target_path); err != nil {
-		return fmt.Errorf("❌ Failed to set TargetPath: %w", err)
-	}
-	_, _ = oleutil.PutProperty(shortcut, "WorkingDirectory", filepath.Dir(target_path))
-	_, _ = oleutil.PutProperty(shortcut, "WindowStyle", window_style)
-	_, _ = oleutil.PutProperty(shortcut, "Description", description)
-	_, _ = oleutil.PutProperty(shortcut, "IconLocation", fmt.Sprintf("%s, 0", target_path))
-
-	// Save the shortcut
-	if _, err := oleutil.CallMethod(shortcut, "Save"); err != nil {
-		return fmt.Errorf("❌ Failed to save shortcut: %w", err)
-	}
-
-	fmt.Printf("✅ Shortcut created at: %s\n", shortcutPath)
-	return nil
+	return fmt.Errorf("❌ Failed to create shortcut after %d attempts: %w", maxRetries, lastErr)
 }
 
 // Extract_zip extracts a ZIP archive specified by src into the destination directory dest.
