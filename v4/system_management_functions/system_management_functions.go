@@ -2406,3 +2406,95 @@ func Are_long_file_paths_enabled() (bool, error) {
 
 	return currentVal == 1, nil
 }
+
+// Clean_path cleans the system PATH (HKLM) by removing duplicates and expanding environment variables.
+// It updates the registry and broadcasts the environment change to Explorer.
+func Clean_path() error {
+	fmt.Println("🧼 Cleaning system PATH...")
+
+	// Step 1: Open registry key
+	key, err := registry.OpenKey(
+		registry.LOCAL_MACHINE,
+		`SYSTEM\CurrentControlSet\Control\Session Manager\Environment`,
+		registry.QUERY_VALUE|registry.SET_VALUE)
+	if err != nil {
+		return fmt.Errorf("❌ Failed to open registry key: %w", err)
+	}
+	defer key.Close()
+
+	raw_path, _, err := key.GetStringValue("Path")
+	if err != nil {
+		return fmt.Errorf("❌ Failed to read PATH: %w", err)
+	}
+	fmt.Println("📍 Current PATH (raw):")
+	fmt.Println(raw_path)
+
+	// Step 2: Normalize, expand, deduplicate
+	entries := strings.Split(raw_path, ";")
+	seen := make(map[string]bool)
+	rebuilt := make([]string, 0)
+
+	fmt.Println("🔍 Normalizing and deduplicating PATH entries:")
+	for _, entry := range entries {
+		entry_trimmed := strings.TrimSpace(strings.TrimRight(entry, `\`))
+		if entry_trimmed == "" {
+			continue
+		}
+
+		expanded := strings.TrimRight(Expand_windows_env(entry_trimmed), `\`)
+		lower := strings.ToLower(expanded)
+
+		if entry_trimmed != expanded {
+			fmt.Printf("   - Original: %-70s →  Expanded: %s\n", entry_trimmed, expanded)
+		}
+
+		if !seen[lower] {
+			rebuilt = append(rebuilt, expanded)
+			seen[lower] = true
+		}
+	}
+
+	new_path := strings.Join(rebuilt, ";")
+	fmt.Println("🧩 Cleaned PATH to set in registry:")
+	fmt.Println(new_path)
+
+	// Step 3: Write back
+	if err := key.SetStringValue("Path", new_path); err != nil {
+		return fmt.Errorf("❌ Failed to update PATH in registry: %w", err)
+	}
+	fmt.Println("✅ Cleaned PATH written to registry.")
+
+	// Step 4: Broadcast change
+	const (
+		HWND_BROADCAST   = 0xffff
+		WM_SETTINGCHANGE = 0x001A
+		SMTO_ABORTIFHUNG = 0x0002
+	)
+	user32 := syscall.NewLazyDLL("user32.dll")
+	procSendMessageTimeout := user32.NewProc("SendMessageTimeoutW")
+
+	ret, _, _ := procSendMessageTimeout.Call(
+		uintptr(HWND_BROADCAST),
+		uintptr(WM_SETTINGCHANGE),
+		0,
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr("Environment"))),
+		uintptr(SMTO_ABORTIFHUNG),
+		5000,
+		uintptr(0),
+	)
+	if ret == 0 {
+		fmt.Println("⚠️ Environment change broadcast may have failed.")
+	} else {
+		fmt.Println("📢 Environment update broadcast sent.")
+	}
+
+	// Step 5: Suggest refreshenv
+	if _, err := exec.LookPath("refreshenv"); err == nil {
+		fmt.Println("♻️  'refreshenv' is available. To update this session, run:")
+		fmt.Println("    refreshenv")
+	} else {
+		fmt.Println("ℹ️  'refreshenv' not available in this session.")
+	}
+
+	return nil
+}
