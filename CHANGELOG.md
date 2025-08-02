@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.2] - 2025-006-029@005.021 PM
+
+### Updated
+- Updated fileExists to File_exists.
+
 ## [0.7.1] - 2025-006-029@004.042 PM
 
 ### Updated
