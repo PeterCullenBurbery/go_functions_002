@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2025-007-004@012.023 PM
+
+### Added
+- Added Add_to_path. Add_to_path adds the given path to the top of the system PATH (HKLM) if not already present. It broadcasts the environment change so apps like Explorer pick it up.
+
 ## [0.9.0] - 2025-007-004@011.048 AM
 
 ### Added
