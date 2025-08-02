@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2025-007-004@004.044 PM
+
+### Added
+- Added Set_start_menu_to_left. Set_start_menu_to_left sets the Windows 11 taskbar alignment to the left by writing TaskbarAl=0 in the registry and restarting Explorer.
+- Added Set_start_menu_to_center. Set_start_menu_to_center sets the Windows 11 taskbar alignment to the center by writing TaskbarAl=1 in the registry and restarting Explorer.
+
 ## [1.4.0] - 2025-007-004@004.030 PM
 
 ### Added
