@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2025-006-029@007.045 PM
+
+- I don't know what changed.
+
 ## [0.7.2] - 2025-006-029@005.021 PM
 
 ### Updated
