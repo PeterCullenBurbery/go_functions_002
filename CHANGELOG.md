@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2025-006-029@004.035 PM
+
+### Added
+
+- Added Is_Java_installed. Is_Java_installed checks if both java.exe and javac.exe are available in PATH, or in the default Eclipse Adoptium installation directory.
+- Added fileExists. fileExists checks if a file exists and is not a directory.
+- Added Install_Java. Install_Java ensures Java is installed by checking Is_Java_installed(). If not found, it installs the temurin21 JDK via Chocolatey.
+
 ## [0.6.0] - 2025-006-029@004.014 PM
 
 ### Added
