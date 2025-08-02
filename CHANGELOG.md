@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0] - 2025-007-004@011.048 AM
+
+### Added
+- Added Download_file. Download_file downloads a file from the given URL and saves it to the specified destination path.
+
 ## [0.8.0] - 2025-006-029@007.045 PM
 
 - I don't know what changed.
