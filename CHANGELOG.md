@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2025-007-004@004.030 PM
+
+### Added
+- Added Set_dark_mode. Set_dark_mode sets Windows to dark mode for both system and apps.
+- Added Set_light_mode. Set_light_mode sets Windows to light mode for both system and apps.
+
 ## [1.3.0] - 2025-007-004@003.010 PM
 
 ### Added
