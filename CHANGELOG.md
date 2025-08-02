@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2025-007-004@001.057 PM
+
+### Added
+- Added Exclude_from_Microsoft_Windows_Defender. Exclude_from_Microsoft_Windows_Defender excludes the given file or folder from Microsoft Defender. If a file is given, its parent folder is excluded instead.
+
 ## [1.1.0] - 2025-007-004@001.026 PM
 
 ### Added
