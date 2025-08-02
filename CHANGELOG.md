@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.5.2] - 2025-006-029@006.048 PM
+## [0.6.0] - 2025-006-029@004.014 PM
+
+### Added
+- Added Is_Choco_installed. Is_Choco_installed checks if Chocolatey is installed.
+
+### Updated
+- `Choco_install`: Now uses `Is_Choco_installed` to verify and optionally trigger Chocolatey installation if missing.
+
+## [0.5.2] - 2025-006-029@006.048 AM
 
 - Choco_install updated.
   - "choco list --limit-output --exact msys2" instead of "choco list --local-only msys2"
