@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2025-007-004@004.046 PM
+
+### Added
+- Added Show_file_extensions. Show_file_extensions sets HideFileExt = 0 to make file extensions visible.
+- Added Do_not_show_file_extensions. Do_not_show_file_extensions sets HideFileExt = 1 to hide file extensions.
+- Dang, that's close on the heels of 2025-007-004@004.044 PM! 2 minutes! 1.5.0.
+
 ## [1.5.0] - 2025-007-004@004.044 PM
 
 ### Added
