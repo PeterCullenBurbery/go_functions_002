@@ -2,13 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.2] - 2025-006-027@008.048 PM
+## [0.5.2] - 2025-006-029@006.048 PM
+
+- Choco_install updated.
+  - "choco list --limit-output --exact msys2" instead of "choco list --local-only msys2"
+
+## [0.5.1] - 2025-006-028@008.007 PM
+
+- Choco_install updated.
+  - Clearer fallback logic using os.Stat instead of a cmd shell workaround.
+
+## [0.5.0] - 2025-006-028@006.059 PM
+
+- Added Install_choco. Install_choco installs Chocolatey using the official PowerShell script.
+
+## [0.4.3] - 2025-006-028@003.013 PM
+
+- I don't understand what the difference is. Something with yaml functions.
+
+## [0.4.2] - 2025-006-027@008.052 PM
 
 - Added Winget_install. Winget_install installs the specified package using winget with standard flags.
 
 ## [0.4.1] - 2025-006-027@008.048 PM
 
-- I couldn't figure out what the difference was.
+- I don't understand what the difference is.
 
 ## [0.4.0] - 2025-006-027@008.040 PM
 
