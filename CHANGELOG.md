@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2025-007-004@003.010 PM
+
+### Added
+- Added Extract_password_protected_zip. Extract_password_protected_zip extracts a password-protected ZIP archive using AES or ZipCrypto.
+
 ## [1.2.0] - 2025-007-004@001.057 PM
 
 ### Added
