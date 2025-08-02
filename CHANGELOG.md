@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.1] - 2025-006-029@004.042 PM
+
+### Updated
+- `Date_time_stamp`: Now automatically installs Java using `system_management_functions` if it is not found, simplifying usage by requiring no arguments.
+
 ## [0.7.0] - 2025-006-029@004.035 PM
 
 ### Added
