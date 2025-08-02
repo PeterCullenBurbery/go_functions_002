@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2025-007-004@001.026 PM
+
+### Added
+- Added Remove_from_path. Remove_from_path removes the given path from the system PATH if present. It normalizes the path, modifies HKLM registry, and broadcasts environment changes.
+- Added Create_desktop_shortcut. Create_desktop_shortcut creates a .lnk shortcut on the desktop. It accepts the target path, shortcut name (optional), description (optional), window style (3 = maximized), and allUsers flag.
+- Added Extract_zip. Extract_zip extracts a ZIP archive specified by src into the destination directory dest. It protects against Zip Slip attacks by ensuring all extracted paths are within dest.
+
 ## [1.0.0] - 2025-007-004@012.023 PM
 
 ### Added
