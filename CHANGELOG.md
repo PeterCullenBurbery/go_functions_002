@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.1] - 2025-007-007@010.049 AM
+
+### Improved
+- Updated Add_to_path:
+  - Now rewrites the entire PATH with fully expanded, deduplicated, and normalized entries.
+  - Removes duplicates even if they differ by case, trailing slashes, or use of environment variables (e.g., `%SystemRoot%`).
+  - Stores only literal absolute paths, eliminating any `%VAR%` references in PATH.
+
 ## [3.3.0] - 2025-007-007@008.056 AM
 
 - Updated Add_to_path/Remove_from_path to expand environment variables before comparing.
