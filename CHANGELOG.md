@@ -18,6 +18,10 @@ I wasn't using ChatGPT/AI to write commits until 3.4.0.
 ### Added
 - Add function to restore classic right-click menu.
   - Introduces Bring_back_the_right_click_menu, which applies a registry tweak to restore the classic Windows right-click context menu and restarts File Explorer to apply the change.
+- Add functions to toggle Windows 11 right-click menu.
+  - Introduces Bring_back_the_right_click_menu to enable the classic Windows 10-style context menu and Use_Windows_11_right_click_menu to restore the default Windows 11 context menu. Both functions modify specific registry keys and restart Explorer to apply changes.
+- Added documentation to Bring_back_the_right_click_menu.
+- Added Use_Windows_11_right_click_menu.
 
 ## [4.0.0] - 2025-007-012@008.026 PM
 
