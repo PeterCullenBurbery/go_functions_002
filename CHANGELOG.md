@@ -6,6 +6,11 @@ Note:
 
 A lot of differences are uncertain.
 
+## [3.5.1] - 2025-007-010@003.035 PM
+
+- Refactor JAVA_HOME setting in Install_Java
+  - Replaces direct PowerShell command with a call to Set_system_environment_variable for setting JAVA_HOME. This improves code maintainability and centralizes environment variable management.
+
 ## [3.5.0] - 2025-007-010@003.031 PM
 
 - Add function to set system environment variable
