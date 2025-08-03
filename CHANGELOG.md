@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.0] - 2025-007-005@007.026 PM
+
+### Improved
+- Improved Enable_SSH_through_firewall:
+  - Refactored to use `run_powershell` helper for clarity and maintainability.
+  - Simplified logic with cleaner PowerShell invocation.
+
+- I don't understand what the difference is. I didn't understand what the difference is. I asked ChatGPT to write a summary (above).
+
 ## [3.0.0] - 2025-007-005@006.036 PM
 
 ### Added
