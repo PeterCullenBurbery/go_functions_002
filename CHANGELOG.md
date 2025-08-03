@@ -6,6 +6,12 @@ Note:
 
 A lot of differences I don't know.
 
+## [3.4.0] - 2025-007-009@007.041 PM
+
+- Added math_functions.
+  - Added Topological_sort. Topological_sort performs a topological sort on a DAG using Kahn's algorithm. Returns the ordered list of tasks, or an error if a cycle is detected.
+  - Reverse_topological_sort performs a topological sort and returns the reversed order. Useful for teardown operations or viewing leaf-to-root dependencies.
+
 ## [3.3.4] - 2025-007-007@006.020 PM
 
 - Add_to_path's code updated.
