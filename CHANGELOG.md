@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.0] - 2025-007-005@007.048 PM
+
+- Updated Install_Java. Install_Java now sets JAVA_HOME to `C:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot` using ```(`[Environment]::SetEnvironmentVariable("JAVA_HOME", "%s", "Machine")`, java_home)```.
+
 ## [3.1.1] - 2025-007-005@007.029 PM
 
 - Renamed Enable_ssh_through_firewall to Enable_SSH_through_firewall.
