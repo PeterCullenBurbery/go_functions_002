@@ -6,7 +6,7 @@ Note:
 
 A lot of differences are uncertain.
 
-## [3.9.0] - 2025-007-011@009.055 PM
+## [3.8.1] - 2025-007-011@009.055 PM
 
 - Remove PowerShell version detection functions
   - Deleted the PowershellVersionDetails struct and the Get_powershell_version function, including the embedded PowerShell script and related JSON parsing. This streamlines the code by removing PowerShell version detection logic that is no longer needed.
