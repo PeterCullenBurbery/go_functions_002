@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.0] - 2025-007-004@009.054 PM
+
+### Added
+- Added Set_time_pattern.
+  - Set_time_pattern sets custom time patterns and separator:
+    - Long time:  "HH.mm.ss"
+    - Short time: "HH.mm.ss"
+    - Separator:  "."
+- Added Reset_time_pattern. Reset_time_pattern resets long/short time format and separator to system defaults.
+
 ## [2.2.0] - 2025-007-004@007.023 PM
 
 ### Added
