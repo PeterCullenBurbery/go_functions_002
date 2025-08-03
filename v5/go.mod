@@ -1,4 +1,4 @@
-module github.com/PeterCullenBurbery/go_functions_002/v4
+module github.com/PeterCullenBurbery/go_functions_002/v5
 
 go 1.24.4
 

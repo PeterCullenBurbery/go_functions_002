@@ -10,6 +10,12 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [5.0.0] - 2025-008-003 016.006.054.065664300 America/New_York 2025-W031-007 2025-215
+
+### Added
+- Added folder for version 5.
+- Removed folder for v4.
+
 ## [4.9.0] - 2025-007-24@003.004 PM
 
 ### Added
