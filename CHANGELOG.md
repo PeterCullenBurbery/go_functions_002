@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2025-007-004@006.012 PM
+
+### Added
+- Added Set_short_date_pattern. Set_short_date_pattern sets the short date pattern to "yyyy-MM-dd-dddd" and broadcasts the change to the system.
+- Added Reset_short_date_pattern. Reset_short_date_pattern resets the short date pattern to "M/d/yyyy" and broadcasts the change to the system.
+- Okay back to short timing between repository commits.
+
 ## [1.9.0] - 2025-007-004@004.057 PM
 
 ### Added
