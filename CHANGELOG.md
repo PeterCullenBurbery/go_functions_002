@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.0] - 2025-007-005@006.036 PM
+
+### Added
+- Added folder for version 3.
+- Removed folder for v2.
+
 ## [2.9.0] - 2025-007-005@006.019 PM
 
 - Added Enable_SSH. Enable_SSH ensures the "sshd" service is set to Automatic and Running.
