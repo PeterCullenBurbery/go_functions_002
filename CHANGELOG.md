@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] - 2025-007-004@004.054 PM
+
+### Added
+- Added Hide_search_box. Hide_search_box sets SearchboxTaskbarMode = 0 to hide the taskbar search box.
+- Added Do_not_hide_search_box. Do_not_hide_search_box sets SearchboxTaskbarMode = 2 to show the full search box on the taskbar.
+- Dang! That's close. 2 minutes.
+
 ## [1.7.0] - 2025-007-004@004.052 PM
 
 ### Added
