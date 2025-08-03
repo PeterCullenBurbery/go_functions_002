@@ -6,6 +6,11 @@ Note:
 
 A lot of differences are uncertain.
 
+## [3.5.0] - 2025-007-010@003.031 PM
+
+- Add function to set system environment variable
+  - Introduces Set_system_environment_variable, which sets a system-wide environment variable in the Windows registry and broadcasts the change so that other processes recognize the update. Includes error handling and status messages for each step.
+
 ## [3.4.1] - 2025-007-009@007.049 PM
 
 - Updated Topological_sort to sort nodes with the same precedence alphabetically, ensuring deterministic output. This affects both Topological_sort and Reverse_topological_sort, improving consistency for repeated runs with the same input graph.
