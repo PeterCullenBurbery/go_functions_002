@@ -10,6 +10,11 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [4.6.0] - 2025-007-22@009.053 AM
+
+- Improve Remove_from_path with better matching and user advice
+  - Enhanced the Remove_from_path function to normalize and compare PATH entries in a case-insensitive manner, handle environment variable expansion, and provide clearer output. Added a check for 'refreshenv' availability and advise the user to run it if present, improving the user experience after modifying the system PATH.
+
 ## [4.5.0] - 2025-007-22@009.050 AM
 
 - Add refreshenv message to Add_to_path.
