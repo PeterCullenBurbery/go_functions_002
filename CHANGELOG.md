@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2025-007-004@006.018 PM
+
+### Added
+- Added Set_long_date_pattern. Set_long_date_pattern sets the long date pattern to "yyyy-MM-dd-dddd" and broadcasts the change to the system.
+- Added Reset_long_date_pattern. Reset_long_date_pattern resets the long date pattern to the default "dddd, MMMM d, yyyy" and broadcasts the change to the system.
+
 ## [2.0.0] - 2025-007-004@006.012 PM
 
 ### Added
