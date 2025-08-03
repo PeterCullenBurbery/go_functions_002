@@ -2,18 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.8.0] - 2025-007-005@012.028 APM
+## [2.9.0] - 2025-007-005@006.019 PM
+
+- Added Enable_SSH. Enable_SSH ensures the "sshd" service is set to Automatic and Running.
+
+## [2.8.0] - 2025-007-005@012.028 PM
 
 - Add_to_ps_module_path modified. I'm not what the difference is.
 - Remove_from_ps_module_path modified. I'm not sure what the difference is.
 - I'm not sure what the difference is.
 
-## [2.7.0] - 2025-007-005@012.001 APM
+## [2.7.0] - 2025-007-005@012.001 PM
 
 - Added Add_to_ps_module_path. Add_to_ps_module_path adds the given directory to the system-wide PSModulePath environment variable.
 - Added Remove_from_ps_module_path. Remove_from_ps_module_path removes the given directory from the system-wide PSModulePath environment variable.
 
-## [2.6.0] - 2025-007-005@011.038 APM
+## [2.6.0] - 2025-007-005@011.038 AM
 
 - Added Convert_blob_to_raw_github_url. Convert_blob_to_raw_github_url transforms a GitHub "blob" URL into a "raw" content URL.
 
