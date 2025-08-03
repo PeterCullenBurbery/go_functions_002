@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.0] - 2025-007-004@009.059 PM
+
+### Added
+- Added Set_24_hour_format. Set_24_hour_format configures Windows to use 24-hour time by setting iTime = 1.
+- Added Do_not_use_24_hour_format. Do_not_use_24_hour_format configures Windows to use 12-hour time by setting iTime = 0.
+
 ## [2.3.0] - 2025-007-004@009.054 PM
 
 ### Added
