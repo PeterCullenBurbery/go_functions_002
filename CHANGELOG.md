@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.8.0] - 2025-007-005@012.028 APM
+
+- Add_to_ps_module_path modified. I'm not what the difference is.
+- Remove_from_ps_module_path modified. I'm not sure what the difference is.
+- I'm not sure what the difference is.
+
 ## [2.7.0] - 2025-007-005@012.001 APM
 
 - Added Add_to_ps_module_path. Add_to_ps_module_path adds the given directory to the system-wide PSModulePath environment variable.
