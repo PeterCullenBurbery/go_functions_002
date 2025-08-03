@@ -6,6 +6,10 @@ Note:
 
 A lot of differences I don't know.
 
+## [3.3.4] - 2025-007-007@006.020 PM
+
+- Add_to_path's code updated.
+
 ## [3.3.3] - 2025-007-007@003.046 PM
 
 - Added Expand_windows_env. Expand_windows_env expands environment variables using the Windows API. For example, %SystemRoot% becomes C:\Windows. Add_to_path now uses Expand_windows_env, instead of os.ExpandEnv.
