@@ -10,6 +10,11 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [4.2.0] - 2025-007-017@005.010 PM
+
+- Add function to enable long file paths in Windows.
+  - Introduces Enable_long_file_paths, which sets LongPathsEnabled=1 in the Windows registry to allow long file path support. The function checks the current value before updating and requires administrator privileges.
+
 ## [4.1.0] - 2025-007-013@009.028 PM
 
 ### Removed
