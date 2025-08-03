@@ -1,9 +1,9 @@
 cff-version: 1.2.0
 message: "If you use this module, please cite it using the metadata below."
-title: "Peter Cullen Burbery Python functions"
+title: "Go functions-002"
 version: "5.1.0"
-# doi: 10.5281/zenodo.16727183
-# url: https://doi.org/10.5281/zenodo.16727183
+# doi: 10.5281/zenodo.16750000
+# url: https://doi.org/10.5281/zenodo.16750000
 authors:
   - family-names: Burbery
     given-names: Peter Cullen
