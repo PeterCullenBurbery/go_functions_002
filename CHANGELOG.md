@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.7.0] - 2025-007-005@012.001 APM
+
+- Added Add_to_ps_module_path. Add_to_ps_module_path adds the given directory to the system-wide PSModulePath environment variable.
+- Added Remove_from_ps_module_path. Remove_from_ps_module_path removes the given directory from the system-wide PSModulePath environment variable.
+
 ## [2.6.0] - 2025-007-005@011.038 APM
 
 - Added Convert_blob_to_raw_github_url. Convert_blob_to_raw_github_url transforms a GitHub "blob" URL into a "raw" content URL.
