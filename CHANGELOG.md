@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] - 2025-007-004@007.023 PM
+
+### Added
+- Added folder for v2.
+
 ## [2.1.0] - 2025-007-004@006.018 PM
 
 ### Added
