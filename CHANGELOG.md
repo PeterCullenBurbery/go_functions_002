@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.1] - 2025-007-006@003.039 PM
+
+- Update date_time_functions to use "github.com/PeterCullenBurbery/go_functions_002/v3/system_management_functions" instead of "github.com/PeterCullenBurbery/go_functions_002/v2/system_management_functions".
+
 ## [3.2.0] - 2025-007-005@007.048 PM
 
 - Updated Install_Java. Install_Java now sets JAVA_HOME to `C:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot` using ```(`[Environment]::SetEnvironmentVariable("JAVA_HOME", "%s", "Machine")`, java_home)```.
