@@ -6,6 +6,11 @@ Note:
 
 A lot of differences are uncertain.
 
+## [3.8.0] - 2025-007-011@009.046 PM
+
+- Add PowerShell version detection utility
+  - Introduces Get_powershell_version, which runs a PowerShell script to detect version details and feature support, returning a structured PowershellVersionDetails object. This helps determine PowerShell capabilities at runtime for improved compatibility handling.
+
 ## [3.7.0] - 2025-007-011@010.024 AM
 
 - Add function to restart Windows File Explorer
