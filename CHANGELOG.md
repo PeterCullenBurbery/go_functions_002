@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.0] - 2025-007-004@004.057 PM
+
+### Added
+- Added Seconds_in_taskbar. Seconds_in_taskbar enables seconds on the taskbar clock by setting ShowSecondsInSystemClock = 1.
+- Added Take_seconds_out_of_taskbar. Take_seconds_out_of_taskbar disables seconds on the taskbar clock by setting ShowSecondsInSystemClock = 0.
+
 ## [1.8.0] - 2025-007-004@004.054 PM
 
 ### Added
