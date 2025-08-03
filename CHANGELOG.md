@@ -10,6 +10,12 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [4.9.0] - 2025-007-24@003.004 PM
+
+### Added
+- Add retry logic to Create_desktop_shortcut.
+  - The Create_desktop_shortcut function now retries up to 100 times with a delay if shortcut creation fails. This improves robustness against transient errors when creating desktop shortcuts. I haven't really tested it. I haven't really tested it, really. I should test it at some point.
+
 ## [4.8.0] - 2025-007-24@001.054 PM
 
 ### Added
