@@ -1,7 +1,7 @@
 # go_functions_002
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)  
-[![Go Reference](https://pkg.go.dev/badge/github.com/PeterCullenBurbery/go_functions_002.svg)](https://pkg.go.dev/github.com/PeterCullenBurbery/go_functions_002)
+[![Go Reference](https://pkg.go.dev/badge/github.com/PeterCullenBurbery/go_functions_002/v5.svg)](https://pkg.go.dev/github.com/PeterCullenBurbery/go_functions_002/v5)
 
 **Author:** Peter Cullen Burbery  
 **Language:** Go 1.21+  
