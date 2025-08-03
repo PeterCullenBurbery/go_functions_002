@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this module, please cite it using the metadata below."
 title: "Go functions-002"
-version: "5.1.0"
+version: "5.1.1"
 # doi: 10.5281/zenodo.16750000
 # url: https://doi.org/10.5281/zenodo.16750000
 authors:
