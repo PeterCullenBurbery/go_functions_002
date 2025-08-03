@@ -10,6 +10,10 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [5.2.0] - 2025-008-003 017.057.022.251943100 America/New_York 2025-W031-007 2025-215
+
+- Zenodo [meta]data has been added.
+
 ## [5.1.1] - 2025-008-003 017.052.023.246101600 America/New_York 2025-W031-007 2025-215
 
 - CITATION.cff incorrectly was "Peter Cullen Burbery Python functions". CITATION.cff has been updated to "Go functions-002".
