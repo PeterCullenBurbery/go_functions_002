@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.1] - 2025-007-005@007.029 PM
+
+- Renamed Enable_ssh_through_firewall to Enable_SSH_through_firewall.
+
 ## [3.1.0] - 2025-007-005@007.026 PM
 
 ### Improved
