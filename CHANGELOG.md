@@ -6,6 +6,11 @@ Note:
 
 A lot of differences are uncertain.
 
+## [3.6.0] - 2025-007-010@003.041 PM
+
+- Add function to get primary IPv4 address
+  - Introduces Get_primary_ipv4_address, which selects the most appropriate local IPv4 address by prioritizing preferred network interfaces and filtering out virtual, loopback, and irrelevant interfaces. Helper functions for extracting IPv4 addresses and checking excluded interface names are also included.
+
 ## [3.5.1] - 2025-007-010@003.035 PM
 
 - Refactor JAVA_HOME setting in Install_Java
