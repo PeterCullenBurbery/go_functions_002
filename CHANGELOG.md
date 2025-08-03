@@ -10,6 +10,15 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [4.1.0] - 2025-007-013@009.028 PM
+
+### Removed
+- Removed folder for v3.
+
+### Added
+- Add function to restore classic right-click menu.
+  - Introduces Bring_back_the_right_click_menu, which applies a registry tweak to restore the classic Windows right-click context menu and restarts File Explorer to apply the change.
+
 ## [4.0.0] - 2025-007-012@008.026 PM
 
 ### Added
