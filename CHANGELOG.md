@@ -10,6 +10,10 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [5.1.0] - 2025-008-003 017.010.043.238504300 America/New_York 2025-W031-007 2025-215
+
+- released for Zenodo. released for Zenodo release.
+
 ## [5.0.0] - 2025-008-003 016.006.054.065664300 America/New_York 2025-W031-007 2025-215
 
 ### Added
