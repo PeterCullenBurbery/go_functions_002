@@ -130,12 +130,20 @@ func main() {
 
 ```
 go_functions_002/
-├── date_time_functions/
-├── math_functions/
-├── system_management_functions/
-├── yaml_functions/
 ├── CHANGELOG.md
-└── LICENSE
+├── LICENSE
+├── README.md
+└── v5
+    ├── go.mod
+    ├── go.sum
+    ├── date_time_functions/
+    │   └── date_time_functions.go
+    ├── math_functions/
+    │   └── math_functions.go
+    ├── system_management_functions/
+    │   └── system_management_functions.go
+    └── yaml_functions/
+        └── yaml_functions.go
 ```
 
 ---
