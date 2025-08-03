@@ -10,6 +10,10 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [4.5.0] - 2025-007-22@009.050 AM
+
+- Add refreshenv message to Add_to_path.
+
 ## [4.4.1] - 2025-007-22@008.007 AM
 
 - Fixed Exclude_from_Microsoft_Windows_Defender exclude from Defender only if Microsoft Windows Defender is running. Before Exclude_Defender would error out when asked. The function now works as intended by not adding exclusion if Microsoft Windows Defender is not running.
