@@ -10,6 +10,14 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [5.3.0] - 2025-008-003 018.021.016.455497600 America/New_York 2025-W031-007 2025-215
+
+### Added
+- `date_time_functions.Generate_pdb_name_from_timestamp`
+  - Returns a PDB-style name using zero‑padded components:
+    - Format: `pdb_YYYY_MMM_DDD_HHH_MMM_SSS`
+    - Example: `pdb_2025_007_031_017_020_008`
+
 ## [5.2.0] - 2025-008-003 017.057.022.251943100 America/New_York 2025-W031-007 2025-215
 
 - Zenodo [meta]data has been added.
