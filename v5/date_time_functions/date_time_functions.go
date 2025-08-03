@@ -113,3 +113,29 @@ func Safe_time_stamp(timestamp string, mode int) string {
 	}
 	return timestamp
 }
+
+// Generate_pdb_name_from_timestamp returns a dynamic PDB name in the format:
+// pdb_<YYYY>_<MMM>_<DDD>_<HHH>_<MMM>_<SSS>
+//
+// Example:
+//     pdb_2025_007_031_017_020_008
+func Generate_pdb_name_from_timestamp() (string, error) {
+	// Ensure Java is installed if needed for time zone detection
+	if err := system_management_functions.Install_Java(); err != nil {
+		return "", fmt.Errorf("❌ Java installation failed: %w", err)
+	}
+
+	// Get the current local time
+	now := time.Now()
+
+	// Format each component accordingly
+	year := now.Year()
+	month := fmt.Sprintf("%03d", int(now.Month()))
+	day := fmt.Sprintf("%03d", now.Day())
+	hour := fmt.Sprintf("%03d", now.Hour())
+	minute := fmt.Sprintf("%03d", now.Minute())
+	second := fmt.Sprintf("%03d", now.Second())
+
+	// Assemble and return the PDB name
+	return fmt.Sprintf("pdb_%d_%s_%s_%s_%s_%s", year, month, day, hour, minute, second), nil
+}
