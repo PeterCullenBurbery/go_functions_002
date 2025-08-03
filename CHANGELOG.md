@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.5.0] - 2025-007-004@010.005 PM
+
+### Added
+- Added Set_first_day_of_week_Monday. Set_first_day_of_week_Monday sets Monday as the first day of the week in Windows regional settings.
+- Added Set_first_day_of_week_Sunday. Set_first_day_of_week_Sunday sets Sunday as the first day of the week in Windows regional settings.
+- Dang! That's close!.
+
 ## [2.4.0] - 2025-007-004@009.059 PM
 
 ### Added
