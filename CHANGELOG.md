@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Added folder for version 3.
 - Removed folder for v2.
+- Added Enable_SSH_through_firewall. Enable_SSH_through_firewall ensures that TCP port 22 is allowed in the firewall for all profiles.
 
 ## [2.9.0] - 2025-007-005@006.019 PM
 
