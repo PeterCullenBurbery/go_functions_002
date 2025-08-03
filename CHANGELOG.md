@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.0] - 2025-007-007@008.056 AM
+
+- Updated Add_to_path/Remove_from_path to expand environment variables before comparing.
+
 ## [3.2.1] - 2025-007-006@003.039 PM
 
 - Update date_time_functions to use "github.com/PeterCullenBurbery/go_functions_002/v3/system_management_functions" instead of "github.com/PeterCullenBurbery/go_functions_002/v2/system_management_functions".
