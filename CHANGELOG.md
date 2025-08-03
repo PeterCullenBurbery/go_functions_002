@@ -6,6 +6,11 @@ Note:
 
 A lot of differences are uncertain.
 
+## [3.7.0] - 2025-007-011@010.024 AM
+
+- Add function to restart Windows File Explorer
+  - Introduces Restart_file_explorer, which uses PowerShell commands to stop and restart explorer.exe, and waits for the process to relaunch. This utility aids in programmatically refreshing the Windows desktop environment.
+
 ## [3.6.0] - 2025-007-010@003.041 PM
 
 - Add function to get primary IPv4 address
