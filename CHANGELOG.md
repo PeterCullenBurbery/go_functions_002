@@ -6,6 +6,10 @@ Note:
 
 A lot of differences are uncertain.
 
+After 3.3.4, versions become more certain.
+
+I wasn't using ChatGPT/AI to write commits until 3.4.0.
+
 ## [4.0.0] - 2025-007-012@008.026 PM
 
 ### Added
