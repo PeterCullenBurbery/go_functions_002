@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2025-007-004@004.052 PM
+
+### Added
+- Added Show_hidden_files. Show_hidden_files sets Hidden = 1 to show hidden files in File Explorer.
+- Added Do_not_show_hidden_files. Do_not_show_hidden_files sets Hidden = 2 to hide hidden files in File Explorer.
+- Dang! That's also close.
+
 ## [1.6.0] - 2025-007-004@004.046 PM
 
 ### Added
