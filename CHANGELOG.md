@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.6.0] - 2025-007-005@011.038 APM
+
+- Added Convert_blob_to_raw_github_url. Convert_blob_to_raw_github_url transforms a GitHub "blob" URL into a "raw" content URL.
+
 ## [2.5.0] - 2025-007-004@010.005 PM
 
 ### Added
