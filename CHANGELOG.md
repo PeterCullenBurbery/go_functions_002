@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.3] - 2025-007-007@003.046 PM
+
+- Added Expand_windows_env. Expand_windows_env expands environment variables using the Windows API. For example, %SystemRoot% becomes C:\Windows.
+
 ## [3.3.2] - 2025-007-007@011.032 AM
 
 - Add_to_path now prints fmt.Printf("📝 New PATH to be written:\n%s\n", path to be written.
