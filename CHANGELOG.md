@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 
 Note:
 
-A lot of differences I don't know.
+A lot of differences are uncertain.
+
+## [3.4.1] - 2025-007-009@007.049 PM
+
+- Updated Topological_sort to sort nodes with the same precedence alphabetically, ensuring deterministic output. This affects both Topological_sort and Reverse_topological_sort, improving consistency for repeated runs with the same input graph.
 
 ## [3.4.0] - 2025-007-009@007.041 PM
 
