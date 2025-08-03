@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.3.2] - 2025-007-007@011.032 AM
+
+- Add_to_path now prints fmt.Printf("📝 New PATH to be written:\n%s\n", path to be written.
+
 ## [3.3.1] - 2025-007-007@010.049 AM
 
 ### Improved
