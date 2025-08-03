@@ -6,6 +6,13 @@ Note:
 
 A lot of differences are uncertain.
 
+## [4.0.0] - 2025-007-012@008.026 PM
+
+### Added
+- Added folder for version 4.
+- Add human-readable file size function
+  - Introduced Get_file_size_human_readable, which returns the size of a file or directory in a human-readable string format (bytes, KB, MB, GB, TB) with three decimal places. This complements the existing Get_file_size function by providing a more user-friendly output.
+
 ## [3.9.0] - 2025-007-012@007.019 PM
 
 - Add Get_file_size function to calculate file or directory size
