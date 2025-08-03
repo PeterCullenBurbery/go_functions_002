@@ -10,6 +10,11 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [4.8.0] - 2025-007-24@001.054 PM
+
+### Added
+- Added Clean_path. Clean_path cleans the system PATH (HKLM) by removing duplicates and expanding environment variables. It updates the registry and broadcasts the environment change to Explorer.
+
 ## [4.7.0] - 2025-007-22@006.023 PM
 
 - Improve desktop shortcut creation robustness and logging
