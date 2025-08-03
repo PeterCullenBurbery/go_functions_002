@@ -10,6 +10,11 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [4.4.0] - 2025-007-22@007.002 AM
+
+- Updated Exclude_from_Microsoft_Windows_Defender.
+  - Exclude_from_Microsoft_Windows_Defender attempts to find if Defender is running and adds exclusion only if Microsoft Windows Defender is running.
+
 ## [4.3.0] - 2025-007-019@001.015 PM
 - Added Are_long_file_paths_enabled. Are_long_file_paths_enabled checks if long file path support is currently enabled. It returns true if LongPathsEnabled == 1, false otherwise.
 - Updated Enable_long_file_paths to use Are_long_file_paths_enabled() for checking current state before modifying the registry. This improves code clarity and avoids redundant registry access.
