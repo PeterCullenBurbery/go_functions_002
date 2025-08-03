@@ -6,6 +6,11 @@ Note:
 
 A lot of differences are uncertain.
 
+## [3.9.0] - 2025-007-012@007.019 PM
+
+- Add Get_file_size function to calculate file or directory size
+  - Introduces Get_file_size, which returns the size in bytes of a file or the cumulative size of all files within a directory. This utility aids in determining storage usage for a given path.
+
 ## [3.8.1] - 2025-007-011@009.055 PM
 
 - Remove PowerShell version detection functions
