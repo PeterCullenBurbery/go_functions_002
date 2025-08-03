@@ -4,7 +4,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/PeterCullenBurbery/go_functions_002/v5.svg)](https://pkg.go.dev/github.com/PeterCullenBurbery/go_functions_002/v5)
 
 **Author:** Peter Cullen Burbery  
-**Language:** Go 1.21+  
+**Language:** Go 1.24+  
 **Platform:** Primarily Windows, with some cross-platform functions
 
 ---
