@@ -10,6 +10,11 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [4.7.0] - 2025-007-22@006.023 PM
+
+- Improve desktop shortcut creation robustness and logging
+  - Added ensure desktop shortcut exists to Create_desktop_shortcut.
+
 ## [4.6.0] - 2025-007-22@009.053 AM
 
 - Improve Remove_from_path with better matching and user advice
