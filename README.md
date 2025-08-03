@@ -91,6 +91,65 @@ Convenience helpers for working with `map[string]interface{}` parsed from YAML:
 
 ---
 
+## 📊 Condensed Features Table
+
+| Category | Function | Description |
+|----------|----------|-------------|
+| **Date/Time** | `Date_time_stamp()` | Precise timestamp with nanoseconds, week & ordinal date |
+|  | `Format_now()` | Current time in `YYYY-MM-DD HH:MM:SS` |
+|  | `Safe_time_stamp()` | Replaces `/` with ` slash ` for safe filenames |
+| **Math** | `Topological_sort()` | Deterministic DAG topological sort |
+|  | `Reverse_topological_sort()` | Reverse order of topological sort |
+| **PATH & Env** | `Add_to_path()` | Add folder to system PATH |
+|  | `Remove_from_path()` | Remove folder from PATH |
+|  | `Clean_path()` | Deduplicate & normalize PATH |
+|  | `Add_to_ps_module_path()` | Add directory to PSModulePath |
+|  | `Remove_from_ps_module_path()` | Remove directory from PSModulePath |
+|  | `Set_system_environment_variable()` | Set system-wide env variable |
+| **Explorer Tweaks** | `Show_hidden_files()` | Show hidden files |
+|  | `Do_not_show_hidden_files()` | Hide hidden files |
+|  | `Show_file_extensions()` | Show file extensions |
+|  | `Do_not_show_file_extensions()` | Hide file extensions |
+|  | `Bring_back_the_right_click_menu()` | Enable Win10 context menu on Win11 |
+|  | `Use_Windows_11_right_click_menu()` | Restore Win11 default context menu |
+|  | `Hide_search_box()` | Hide taskbar search box |
+|  | `Do_not_hide_search_box()` | Show taskbar search box |
+|  | `Set_dark_mode()` | Set system/apps to dark mode |
+|  | `Set_light_mode()` | Set system/apps to light mode |
+| **Registry Config** | `Set_24_hour_format()` | 24-hour clock |
+|  | `Do_not_use_24_hour_format()` | 12-hour clock |
+|  | `Set_short_date_pattern()` | Custom short date format |
+|  | `Reset_short_date_pattern()` | Restore default short date format |
+|  | `Set_long_date_pattern()` | Custom long date format |
+|  | `Reset_long_date_pattern()` | Restore default long date format |
+|  | `Set_time_pattern()` | Custom time format |
+|  | `Reset_time_pattern()` | Restore default time format |
+|  | `Seconds_in_taskbar()` | Show seconds in taskbar clock |
+|  | `Take_seconds_out_of_taskbar()` | Hide seconds in taskbar clock |
+|  | `Enable_long_file_paths()` | Enable >260 char paths |
+|  | `Are_long_file_paths_enabled()` | Check if long paths are enabled |
+| **Security & Install** | `Exclude_from_Microsoft_Windows_Defender()` | Exclude path from Defender |
+|  | `Choco_install()` | Install Chocolatey package |
+|  | `Winget_install()` | Install package via Winget |
+|  | `Install_choco()` | Install Chocolatey itself |
+|  | `Enable_SSH()` | Enable SSH server |
+|  | `Enable_SSH_through_firewall()` | Open SSH port in firewall |
+| **File Utilities** | `Download_file()` | Download from URL |
+|  | `Extract_zip()` | Extract ZIP |
+|  | `Extract_password_protected_zip()` | Extract password-protected ZIP |
+|  | `File_exists()` | Check if file exists |
+|  | `Get_file_size()` | Get file/dir size in bytes |
+|  | `Get_file_size_human_readable()` | Get file/dir size in readable format |
+|  | `Create_desktop_shortcut()` | Create Windows `.lnk` shortcut |
+| **Networking** | `Get_primary_ipv4_address()` | Get best local IPv4 address |
+| **YAML** | `GetCaseInsensitiveString()` | Case-insensitive key lookup (string) |
+|  | `GetCaseInsensitiveMap()` | Case-insensitive key lookup (map) |
+|  | `GetCaseInsensitiveList()` | Case-insensitive key lookup (list) |
+|  | `GetNestedString()` | Nested string lookup |
+|  | `GetNestedMap()` | Nested map lookup |
+
+---
+
 ## 🖥 Example Usage
 
 ```go
