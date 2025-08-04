@@ -10,6 +10,34 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [5.4.0] - 2025-008-004 008.007.016.794655300 America/New_York 2025-W032-001 2025-216
+
+### Added
+- **`oracle_database_system_management_functions`** package for Oracle CDB/PDB lifecycle management.
+  - **Path Helpers**
+    - `Get_root_datafile_directory` — Locate CDB$ROOT SYSTEM01.DBF directory.
+    - `Get_pdbseed_datafile_directory` — Locate PDB$SEED SYSTEM01.DBF directory.
+    - `Verify_pdbseed_directory_matches_expected` — Validate that PDB$SEED path matches expectations.
+  - **CDB Container Guard**
+    - `Ensure_connected_to_cdb_root` — Verify connected container is CDB$ROOT.
+  - **PDB Lifecycle**
+    - `Create_pluggable_database_from_seed` — Create a new PDB from PDB$SEED.
+    - `Open_pluggable_database_read_write` — Open PDB in READ WRITE mode.
+    - `Save_pluggable_database_state` — Save PDB auto-open state.
+    - `Get_pdb_status` — Retrieve PDB OPEN_MODE.
+    - `Get_saved_state_info` — Retrieve saved state details from DBA_PDB_SAVED_STATES.
+    - `Close_pluggable_database_immediate` — Close PDB immediately.
+    - `Discard_pluggable_database_state` — Remove PDB saved state.
+    - `Drop_pluggable_database_including_datafiles` — Drop PDB and delete datafiles.
+    - `Verify_pluggable_database_dropped` — Confirm PDB no longer exists.
+  - **Session Management**
+    - `Get_user_sessions` — List USER sessions in a PDB.
+    - `Kill_user_sessions_in_pdb` — Kill USER sessions (one pass).
+    - `Kill_user_sessions_in_pdb_until_gone` — Retry killing until no sessions remain.
+  - **Convenience Operations**
+    - `Create_open_save_state_pdb_from_seed` — Create, open, save state in one call.
+    - `Teardown_drop_pdb` — Close, discard state, and drop PDB.
+
 ## [5.3.0] - 2025-008-003 018.021.016.455497600 America/New_York 2025-W031-007 2025-215
 
 ### Added
