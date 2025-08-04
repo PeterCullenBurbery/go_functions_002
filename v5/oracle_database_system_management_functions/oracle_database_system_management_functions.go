@@ -439,9 +439,10 @@ func Create_open_save_state_pdb_from_seed(
 }
 
 // Teardown_drop_pdb closes, discards state, and drops a PDB INCLUDING DATAFILES.
-// If kill_sessions is true, it will attempt to terminate USER sessions in that PDB first.
+// If kill_sessions is true, it will attempt to terminate USER sessions in that PDB first
+// (retrying until none remain, up to 100 attempts, with 300ms between attempts).
 // If instances_all is true, CLOSE IMMEDIATE will be issued with INSTANCES=ALL (for RAC).
-// The function also verifies the drop via DBA_PDBS.
+// The function also verifies the drop via DBA_PDBS and inspects saved state after DISCARD STATE.
 func Teardown_drop_pdb(
 	ctx context.Context,
 	db *sql.DB,
@@ -455,9 +456,9 @@ func Teardown_drop_pdb(
 		return err
 	}
 
-	// Optionally kill active USER sessions to avoid close failures
+	// Optionally kill active USER sessions to avoid close failures (retry until gone)
 	if kill_sessions {
-		if err := Kill_user_sessions_in_pdb(ctx, db, pdb_name); err != nil {
+		if err := Kill_user_sessions_in_pdb_until_gone(ctx, db, pdb_name, 100, 300*time.Millisecond); err != nil {
 			return fmt.Errorf("kill sessions in %s: %w", pdb_name, err)
 		}
 	}
@@ -466,17 +467,27 @@ func Teardown_drop_pdb(
 	if err := Close_pluggable_database_immediate(ctx, db, pdb_name, instances_all); err != nil {
 		// one retry path: attempt to kill sessions and close again
 		if !kill_sessions {
-			_ = Kill_user_sessions_in_pdb(ctx, db, pdb_name) // best effort
+			_ = Kill_user_sessions_in_pdb_until_gone(ctx, db, pdb_name, 100, 300*time.Millisecond) // best effort
 		}
-		if err2 := Close_pluggable_database_immediate(ctx, db, pdb_name, instances_all); err2 != nil {
-			return fmt.Errorf("close pdb %s: %w", pdb_name, err2)
+		if err_second_close := Close_pluggable_database_immediate(ctx, db, pdb_name, instances_all); err_second_close != nil {
+			return fmt.Errorf("close pdb %s: %w", pdb_name, err_second_close)
 		}
 	}
 
-	// Discard auto-open state (ignore error if none was saved)
+	// Discard auto-open state
 	if err := Discard_pluggable_database_state(ctx, db, pdb_name); err != nil {
 		// non-fatal; continue drop anyway
 		log.Printf("⚠️ DISCARD STATE for %s returned: %v (continuing)", pdb_name, err)
+	} else {
+		// Inspect saved state after DISCARD STATE (view may be unavailable in some editions)
+		state, restricted, err_state := Get_saved_state_info(ctx, db, pdb_name)
+		if err_state != nil {
+			log.Println("ℹ️ Could not read DBA_PDB_SAVED_STATES (view may be unavailable):", err_state)
+		} else if state == "" {
+			log.Printf("💾 Saved state for %s is absent after DISCARD STATE (as expected).", pdb_name)
+		} else {
+			log.Printf("⚠️ Saved state still present after DISCARD STATE for %s: STATE=%s, RESTRICTED=%s", pdb_name, state, restricted)
+		}
 	}
 
 	// Drop INCLUDING DATAFILES
