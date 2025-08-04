@@ -1,7 +1,7 @@
 # go_functions_002
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Go Reference](https://pkg.go.dev/badge/github.com/PeterCullenBurbery/go_functions_002/v5.svg)](https://pkg.go.dev/github.com/PeterCullenBurbery/go_functions_002/v5)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)  
+[![Go Reference](https://pkg.go.dev/badge/github.com/PeterCullenBurbery/go_functions_002/v5.svg)](https://pkg.go.dev/github.com/PeterCullenBurbery/go_functions_002/v5)  
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16734055.svg)](https://doi.org/10.5281/zenodo.16734055)
 
 **Author:** Peter Cullen Burbery  
