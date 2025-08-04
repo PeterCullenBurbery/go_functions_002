@@ -244,3 +244,17 @@ public class date_time_stamp {
 
     return strings.TrimSpace(output_buffer.String()), nil
 }
+
+// Generate_prefixed_timestamp returns "<prefix>_YYYY_MMM_DDD_HHH_MMM_SSS_NNNNNNNNN_TimeZone_ISOYEAR_WWWW_WEEKDAY_YYYY_DOY".
+// It reuses Get_timestamp() for the core, ensuring identical formatting and TZ handling.
+func Generate_prefixed_timestamp(prefix string) (string, error) {
+        ts, err := Get_timestamp()
+        if err != nil {
+                return "", err
+        }
+        // If no prefix provided, just return the timestamp.
+        if strings.TrimSpace(prefix) == "" {
+                return ts, nil
+        }
+        return prefix + "_" + ts, nil
+}
