@@ -10,6 +10,10 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [5.4.2] - 2025-008-004 008.033.028.579919600 America/New_York 2025-W032-001 2025-216
+
+- version field removed from CITATION.cff. It was too much hassle [to keep up to date].
+
 ## [5.4.1] - 2025-008-004 008.014.058.855321700 America/New_York 2025-W032-001 2025-216
 
 - update README.md. The links at the top were not spaced out properly.
