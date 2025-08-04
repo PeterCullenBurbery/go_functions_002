@@ -10,6 +10,12 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [5.5.0] - 2025-008-004 014.033.027.485938400 America/New_York 2025-W032-001 2025-216
+
+### Added
+- `date_time_functions.Get_timestamp`
+  - `date_time_functions.Get_timestamp`: now emits the exact underscore-delimited format `YYYY_MMM_DDD_HHH_MMM_SSS_NNNNNNNNN_TimeZone_ISOYEAR_WWWW_WEEKDAY_YYYY_DOY`, with IANA TZ rendered as `America_slash_New_York`. Includes nanosecond precision and ISO week/day-of-year components.
+
 ## [5.4.2] - 2025-008-004 008.033.028.579919600 America/New_York 2025-W032-001 2025-216
 
 - version field removed from CITATION.cff. It was too much hassle [to keep up to date].
