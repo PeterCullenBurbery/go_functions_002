@@ -139,3 +139,108 @@ func Generate_pdb_name_from_timestamp() (string, error) {
 	// Assemble and return the PDB name
 	return fmt.Sprintf("pdb_%d_%s_%s_%s_%s_%s", year, month, day, hour, minute, second), nil
 }
+
+// Get_timestamp returns an underscore-delimited, TZ-aware, nanosecond-precision stamp like:
+// 2025_008_004_014_017_048_822529300_America_slash_New_York_2025_W032_001_2025_216
+func Get_timestamp() (string, error) {
+    // Ensure Java is installed
+    if err := system_management_functions.Install_Java(); err != nil {
+        return "", fmt.Errorf("❌ Java installation failed: %w", err)
+    }
+
+    // Try to find java and javac from PATH
+    java_cmd, err_java := exec.LookPath("java")
+    javac_cmd, err_javac := exec.LookPath("javac")
+
+    // If either is missing, fallback to known Adoptium path
+    if err_java != nil || err_javac != nil {
+        fallback_base := `C:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot\bin`
+        java_fallback := filepath.Join(fallback_base, "java.exe")
+        javac_fallback := filepath.Join(fallback_base, "javac.exe")
+
+        if system_management_functions.File_exists(java_fallback) && system_management_functions.File_exists(javac_fallback) {
+            java_cmd = java_fallback
+            javac_cmd = javac_fallback
+        } else {
+            return "", fmt.Errorf("❌ Could not locate java or javac in PATH or fallback directory")
+        }
+    }
+
+    // Create temp directory for Java source and class files
+    temp_dir, err := os.MkdirTemp("", "date_time_stamp")
+    if err != nil {
+        return "", fmt.Errorf("❌ Failed to create temp directory: %w", err)
+    }
+    defer os.RemoveAll(temp_dir)
+
+    const java_file_name = "date_time_stamp.java"
+    const class_name = "date_time_stamp"
+    java_file_path := filepath.Join(temp_dir, java_file_name)
+
+    java_code := `import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.WeekFields;
+
+public class date_time_stamp {
+    public static void main(String[] args) {
+        ZonedDateTime now = ZonedDateTime.now();
+        ZoneId tz = now.getZone();
+
+        // 3-digit numeric fields by prefixing a literal 0 to 2-digit tokens
+        String year   = now.format(DateTimeFormatter.ofPattern("yyyy"));
+        String month  = now.format(DateTimeFormatter.ofPattern("0MM")); // e.g., 007
+        String day    = now.format(DateTimeFormatter.ofPattern("0dd")); // e.g., 004
+        String hour   = now.format(DateTimeFormatter.ofPattern("0HH"));
+        String minute = now.format(DateTimeFormatter.ofPattern("0mm"));
+        String second = now.format(DateTimeFormatter.ofPattern("0ss"));
+
+        // Nanoseconds
+        String nano = String.format("%09d", now.getNano());
+
+        // ISO week/year/day
+        WeekFields wf = WeekFields.ISO;
+        int isoYear   = now.get(wf.weekBasedYear());
+        int isoWeek   = now.get(wf.weekOfWeekBasedYear());
+        int isoDOW    = now.get(wf.dayOfWeek());
+
+        // Day-of-year (3-digit)
+        String doy = String.format("%03d", now.getDayOfYear());
+
+        // TZ id with _slash_ instead of /
+        String tzId = tz.getId().replace("/", "_slash_");
+
+        // Build underscore string:
+        // YYYY_MMM_DDD_HHH_MMM_SSS_NNNNNNNNN_TimeZone_ISOYEAR_WWWW_WEEKDAY_YYYY_DOY
+        String out = String.format(
+            "%s_%s_%s_%s_%s_%s_%s_%s_W%03d_%03d_%s_%s",
+            year, month, day, hour, minute, second, nano, tzId, isoWeek, isoDOW, year, doy
+        );
+
+        System.out.println(out);
+    }
+}`;
+
+    if err := os.WriteFile(java_file_path, []byte(java_code), 0644); err != nil {
+        return "", fmt.Errorf("❌ Failed to write Java file: %w", err)
+    }
+
+    // Compile
+    cmd_compile := exec.Command(javac_cmd, java_file_name)
+    cmd_compile.Dir = temp_dir
+    if err := cmd_compile.Run(); err != nil {
+        return "", fmt.Errorf("❌ Failed to compile Java file: %w", err)
+    }
+
+    // Run
+    cmd_run := exec.Command(java_cmd, class_name)
+    cmd_run.Dir = temp_dir
+    var output_buffer bytes.Buffer
+    cmd_run.Stdout = &output_buffer
+    cmd_run.Stderr = &output_buffer
+
+    if err := cmd_run.Run(); err != nil {
+        return "", fmt.Errorf("❌ Failed to run Java class: %w\nOutput:\n%s", err, output_buffer.String())
+    }
+
+    return strings.TrimSpace(output_buffer.String()), nil
+}
