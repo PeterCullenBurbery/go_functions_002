@@ -279,7 +279,7 @@ func escape_single_quotes(s string) string {
 
 // Create_open_save_state_pdb_from_seed generates a PDB name using
 // date_time_functions.Generate_pdb_name_from_timestamp(), creates the PDB from PDB$SEED,
-// opens it READ WRITE, saves state, and returns (pdb_name, dest_dir).
+// opens it READ WRITE, saves state, verifies, and returns (pdb_name, dest_dir).
 func Create_open_save_state_pdb_from_seed(
 	ctx context.Context,
 	db *sql.DB,
@@ -312,9 +312,27 @@ func Create_open_save_state_pdb_from_seed(
 		return "", "", fmt.Errorf("open pdb read write: %w", err)
 	}
 
+	// Verify open mode
+	if open_mode, err := Get_pdb_status(ctx, db, pdb_name); err == nil {
+		log.Println("🔎 PDB open mode:", open_mode)
+	} else {
+		log.Println("ℹ️ Could not read PDB open mode:", err)
+	}
+
 	// Save state
 	if err := Save_pluggable_database_state(ctx, db, pdb_name); err != nil {
 		return "", "", fmt.Errorf("save pdb state: %w", err)
+	}
+
+	// Verify saved state info (DBA_PDB_SAVED_STATES)
+	if state, restricted, err := Get_saved_state_info(ctx, db, pdb_name); err == nil {
+		if state != "" {
+			log.Printf("💾 Saved state recorded: STATE=%s, RESTRICTED=%s\n", state, restricted)
+		} else {
+			log.Println("ℹ️ No saved state record found for PDB (view present but row missing).")
+		}
+	} else {
+		log.Println("ℹ️ Could not read DBA_PDB_SAVED_STATES (view may be unavailable):", err)
 	}
 
 	return pdb_name, dest_dir, nil
