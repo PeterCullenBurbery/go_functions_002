@@ -1,7 +1,7 @@
 # go_functions_002
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)  
-[![Go Reference](https://pkg.go.dev/badge/github.com/PeterCullenBurbery/go_functions_002/v5.svg)](https://pkg.go.dev/github.com/PeterCullenBurbery/go_functions_002/v5)  
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/PeterCullenBurbery/go_functions_002/v5.svg)](https://pkg.go.dev/github.com/PeterCullenBurbery/go_functions_002/v5)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16734055.svg)](https://doi.org/10.5281/zenodo.16734055)
 
 **Author:** Peter Cullen Burbery  
@@ -18,10 +18,11 @@
 - **Date and time handling**
 - **YAML parsing**
 - **Mathematical algorithms**
+- **Oracle Database CDB/PDB lifecycle management**
 - **Package management automation** (Chocolatey, Winget)
 - **File and network utilities**
 
-This package is designed for automation, system configuration, and utility scripting — especially for Windows system administration in Go.
+This package is designed for automation, system configuration, database management, and utility scripting — especially for **Windows system administration in Go**.
 
 ---
 
@@ -36,15 +37,49 @@ go get github.com/PeterCullenBurbery/go_functions_002/v5
 ## ✨ Features
 
 ### 📅 Date/Time Functions
-- **`Date_time_stamp()`** – Returns a precise timestamp using a temporary Java helper (auto-installs Java if needed).
+- **`Date_time_stamp()`** – Returns a precise timestamp with nanoseconds, ISO week, and ordinal date.
 - **`Format_now()`** – Returns current time in `"2006-01-02 15:04:05"` format.
-- **`Safe_time_stamp()`** – Produces a safe filename timestamp (replaces `/` with ` slash ` when needed).
+- **`Safe_time_stamp()`** – Produces a safe filename timestamp (replaces `/` with ` slash `).
+- **`Generate_pdb_name_from_timestamp()`** – Generates a unique PDB name from the current timestamp.
 
 ---
 
 ### 🧮 Math Functions
 - **`Topological_sort()`** – Deterministic Kahn’s algorithm, sorts nodes alphabetically when precedence is equal.
-- **`Reverse_topological_sort()`** – Returns reversed topological order (useful for teardown sequences).
+- **`Reverse_topological_sort()`** – Returns reversed topological order.
+
+---
+
+### 🗄 Oracle Database System Management Functions
+Tools for **Oracle CDB/PDB lifecycle management**:
+
+- **Path Helpers**
+  - `Get_root_datafile_directory()` – Locate CDB$ROOT SYSTEM01.DBF directory.
+  - `Get_pdbseed_datafile_directory()` – Locate PDB$SEED SYSTEM01.DBF directory.
+  - `Verify_pdbseed_directory_matches_expected()` – Validate that PDB$SEED path matches expectations.
+
+- **CDB Container Guards**
+  - `Ensure_connected_to_cdb_root()` – Verify connected container is CDB$ROOT.
+
+- **PDB Lifecycle**
+  - `Create_pluggable_database_from_seed()` – Create a new PDB from PDB$SEED.
+  - `Open_pluggable_database_read_write()` – Open PDB in READ WRITE mode.
+  - `Save_pluggable_database_state()` – Save PDB auto-open state.
+  - `Get_pdb_status()` – Retrieve PDB OPEN_MODE.
+  - `Get_saved_state_info()` – Retrieve saved state details from DBA_PDB_SAVED_STATES.
+  - `Close_pluggable_database_immediate()` – Close PDB immediately.
+  - `Discard_pluggable_database_state()` – Remove PDB saved state.
+  - `Drop_pluggable_database_including_datafiles()` – Drop PDB and delete datafiles.
+  - `Verify_pluggable_database_dropped()` – Confirm PDB no longer exists.
+
+- **Session Management**
+  - `Get_user_sessions()` – List USER sessions in a PDB.
+  - `Kill_user_sessions_in_pdb()` – Kill USER sessions (one pass).
+  - `Kill_user_sessions_in_pdb_until_gone()` – Retry killing until no sessions remain.
+
+- **Convenience Operations**
+  - `Create_open_save_state_pdb_from_seed()` – Create, open, save state in one call.
+  - `Teardown_drop_pdb()` – Close, discard state, and drop PDB.
 
 ---
 
@@ -60,14 +95,14 @@ Includes 50+ Windows utilities such as:
   - `Bring_back_the_right_click_menu`, `Use_Windows_11_right_click_menu`
   - `Hide_search_box`, `Do_not_hide_search_box`
   - `Set_dark_mode`, `Set_light_mode`
-- **Registry-Based System Config**
+- **Registry Config**
   - `Set_24_hour_format`, `Do_not_use_24_hour_format`
   - `Set_short_date_pattern`, `Reset_short_date_pattern`
   - `Set_long_date_pattern`, `Reset_long_date_pattern`
   - `Set_time_pattern`, `Reset_time_pattern`
   - `Seconds_in_taskbar`, `Take_seconds_out_of_taskbar`
   - `Enable_long_file_paths`, `Are_long_file_paths_enabled`
-- **Security & Installation Helpers**
+- **Security & Install**
   - `Exclude_from_Microsoft_Windows_Defender`
   - `Choco_install`, `Winget_install`, `Install_choco`
   - `Enable_SSH`, `Enable_SSH_through_firewall`
@@ -99,8 +134,27 @@ Convenience helpers for working with `map[string]interface{}` parsed from YAML:
 | **Date/Time** | `Date_time_stamp()` | Precise timestamp with nanoseconds, week & ordinal date |
 |  | `Format_now()` | Current time in `YYYY-MM-DD HH:MM:SS` |
 |  | `Safe_time_stamp()` | Replaces `/` with ` slash ` for safe filenames |
+|  | `Generate_pdb_name_from_timestamp()` | PDB name based on timestamp |
 | **Math** | `Topological_sort()` | Deterministic DAG topological sort |
 |  | `Reverse_topological_sort()` | Reverse order of topological sort |
+| **Oracle DB** | `Get_root_datafile_directory()` | Locate CDB$ROOT SYSTEM01.DBF directory |
+|  | `Get_pdbseed_datafile_directory()` | Locate PDB$SEED SYSTEM01.DBF directory |
+|  | `Verify_pdbseed_directory_matches_expected()` | Validate PDB$SEED path |
+|  | `Ensure_connected_to_cdb_root()` | Verify CDB$ROOT connection |
+|  | `Create_pluggable_database_from_seed()` | Create new PDB from PDB$SEED |
+|  | `Open_pluggable_database_read_write()` | Open PDB READ WRITE |
+|  | `Save_pluggable_database_state()` | Save auto-open state |
+|  | `Get_pdb_status()` | Get PDB open mode |
+|  | `Get_saved_state_info()` | Retrieve saved state |
+|  | `Close_pluggable_database_immediate()` | Close PDB immediately |
+|  | `Discard_pluggable_database_state()` | Remove saved state |
+|  | `Drop_pluggable_database_including_datafiles()` | Drop PDB with datafiles |
+|  | `Verify_pluggable_database_dropped()` | Confirm PDB is dropped |
+|  | `Get_user_sessions()` | List USER sessions |
+|  | `Kill_user_sessions_in_pdb()` | Kill USER sessions (one pass) |
+|  | `Kill_user_sessions_in_pdb_until_gone()` | Keep killing until none remain |
+|  | `Create_open_save_state_pdb_from_seed()` | Create, open, save state in one call |
+|  | `Teardown_drop_pdb()` | Close, discard, drop PDB |
 | **PATH & Env** | `Add_to_path()` | Add folder to system PATH |
 |  | `Remove_from_path()` | Remove folder from PATH |
 |  | `Clean_path()` | Deduplicate & normalize PATH |
@@ -191,6 +245,7 @@ func main() {
 ```
 go_functions_002/
 ├── CHANGELOG.md
+├── CITATION.cff
 ├── LICENSE
 ├── README.md
 └── v5
@@ -200,6 +255,8 @@ go_functions_002/
     │   └── date_time_functions.go
     ├── math_functions/
     │   └── math_functions.go
+    ├── oracle_database_system_management_functions/
+    │   └── oracle_database_system_management_functions.go
     ├── system_management_functions/
     │   └── system_management_functions.go
     └── yaml_functions/
