@@ -51,16 +51,16 @@ WHERE  REGEXP_LIKE(name, '[\\/]{1}PDBSEED[\\/]{1}SYSTEM01\.DBF', 'i')
 
 // Verify_pdbseed_directory_matches_expected checks that root\PDBSEED\ equals actual PDB$SEED location.
 func Verify_pdbseed_directory_matches_expected(ctx context.Context, db *sql.DB) error {
-	rootDir, err := Get_root_datafile_directory(ctx, db)
+	root_dir, err := Get_root_datafile_directory(ctx, db)
 	if err != nil {
 		return err
 	}
-	expected := normalize_for_compare(rootDir + "PDBSEED\\")
-	actualDir, err := Get_pdbseed_datafile_directory(ctx, db)
+	expected := normalize_for_compare(root_dir + "PDBSEED\\")
+	actual_dir, err := Get_pdbseed_datafile_directory(ctx, db)
 	if err != nil {
 		return err
 	}
-	actual := normalize_for_compare(actualDir)
+	actual := normalize_for_compare(actual_dir)
 	if expected != actual {
 		return fmt.Errorf("expected PDBSEED at %s but found %s", expected, actual)
 	}
@@ -101,70 +101,70 @@ func Create_pluggable_database_from_seed(ctx context.Context, db *sql.DB, pdb_na
 
 	// check not exists
 	var cnt int
-	existsSQL := fmt.Sprintf(`SELECT COUNT(*) FROM DBA_PDBS WHERE PDB_NAME = UPPER('%s')`, pdb_name)
-	if err := db.QueryRowContext(ctx, existsSQL).Scan(&cnt); err != nil {
+	exists_sql := fmt.Sprintf(`SELECT COUNT(*) FROM DBA_PDBS WHERE PDB_NAME = UPPER('%s')`, pdb_name)
+	if err := db.QueryRowContext(ctx, exists_sql).Scan(&cnt); err != nil {
 		return "", fmt.Errorf("checking if PDB exists: %w", err)
 	}
 	if cnt > 0 {
 		return "", fmt.Errorf("PDB %s already exists", pdb_name)
 	}
 
-	rootDir, err := Get_root_datafile_directory(ctx, db)
+	root_dir, err := Get_root_datafile_directory(ctx, db)
 	if err != nil {
 		return "", err
 	}
-	seedDir := normalize_windows_dir(rootDir + "PDBSEED\\")
-	destDir := normalize_windows_dir(rootDir + pdb_name + `\`)
+	seed_dir := normalize_windows_dir(root_dir + "PDBSEED\\")
+	dest_dir := normalize_windows_dir(root_dir + pdb_name + `\`)
 
-	createSQL := fmt.Sprintf(
+	create_sql := fmt.Sprintf(
 		"CREATE PLUGGABLE DATABASE %s ADMIN USER %s IDENTIFIED BY %s FILE_NAME_CONVERT = ('%s', '%s')",
 		pdb_name,
 		admin_user,
 		admin_password,
-		escape_single_quotes(seedDir),
-		escape_single_quotes(destDir),
+		escape_single_quotes(seed_dir),
+		escape_single_quotes(dest_dir),
 	)
 
-	log.Println("▶ Executing:", createSQL)
-	if _, err := db.ExecContext(ctx, createSQL); err != nil {
+	log.Println("▶ Executing:", create_sql)
+	if _, err := db.ExecContext(ctx, create_sql); err != nil {
 		return "", fmt.Errorf("CREATE PLUGGABLE DATABASE failed: %w", err)
 	}
-	return destDir, nil
+	return dest_dir, nil
 }
 
 // Open_pluggable_database_read_write opens the given PDB READ WRITE.
 func Open_pluggable_database_read_write(ctx context.Context, db *sql.DB, pdb_name string) error {
-	sqlText := fmt.Sprintf("ALTER PLUGGABLE DATABASE %s OPEN READ WRITE", pdb_name)
-	_, err := db.ExecContext(ctx, sqlText)
+	sql_text := fmt.Sprintf("ALTER PLUGGABLE DATABASE %s OPEN READ WRITE", pdb_name)
+	_, err := db.ExecContext(ctx, sql_text)
 	return err
 }
 
 // Save_pluggable_database_state saves the auto-open state for the given PDB.
 func Save_pluggable_database_state(ctx context.Context, db *sql.DB, pdb_name string) error {
-	sqlText := fmt.Sprintf("ALTER PLUGGABLE DATABASE %s SAVE STATE", pdb_name)
-	_, err := db.ExecContext(ctx, sqlText)
+	sql_text := fmt.Sprintf("ALTER PLUGGABLE DATABASE %s SAVE STATE", pdb_name)
+	_, err := db.ExecContext(ctx, sql_text)
 	return err
 }
 
 // Get_pdb_status returns the OPEN_MODE from V$PDBS for the given PDB name.
 func Get_pdb_status(ctx context.Context, db *sql.DB, pdb_name string) (string, error) {
-	sqlText := fmt.Sprintf("SELECT OPEN_MODE FROM V$PDBS WHERE NAME = UPPER('%s')", pdb_name)
-	var openMode string
-	if err := db.QueryRowContext(ctx, sqlText).Scan(&openMode); err != nil {
+	sql_text := fmt.Sprintf("SELECT OPEN_MODE FROM V$PDBS WHERE NAME = UPPER('%s')", pdb_name)
+	var open_mode string
+	if err := db.QueryRowContext(ctx, sql_text).Scan(&open_mode); err != nil {
 		return "", err
 	}
-	return openMode, nil
+	return open_mode, nil
 }
 
 // Get_saved_state_info returns (STATE, RESTRICTED) from DBA_PDB_SAVED_STATES for the PDB (by CON_NAME).
 // If the row is not present, it returns ("","") and nil error.
 func Get_saved_state_info(ctx context.Context, db *sql.DB, pdb_name string) (string, string, error) {
-	sqlText := fmt.Sprintf(`
+	sql_text := fmt.Sprintf(`
 SELECT state, restricted
 FROM   dba_pdb_saved_states
 WHERE  con_name = UPPER('%s')`, pdb_name)
 	var state, restricted string
-	err := db.QueryRowContext(ctx, sqlText).Scan(&state, &restricted)
+	err := db.QueryRowContext(ctx, sql_text).Scan(&state, &restricted)
 	if err == sql.ErrNoRows {
 		return "", "", nil
 	}
@@ -174,35 +174,35 @@ WHERE  con_name = UPPER('%s')`, pdb_name)
 // Close_pluggable_database_immediate closes the PDB immediately.
 // If instances_all is true, issues "INSTANCES=ALL" (for RAC).
 func Close_pluggable_database_immediate(ctx context.Context, db *sql.DB, pdb_name string, instances_all bool) error {
-	sqlText := fmt.Sprintf("ALTER PLUGGABLE DATABASE %s CLOSE IMMEDIATE", pdb_name)
+	sql_text := fmt.Sprintf("ALTER PLUGGABLE DATABASE %s CLOSE IMMEDIATE", pdb_name)
 	if instances_all {
-		sqlText += " INSTANCES=ALL"
+		sql_text += " INSTANCES=ALL"
 	}
-	_, err := db.ExecContext(ctx, sqlText)
+	_, err := db.ExecContext(ctx, sql_text)
 	return err
 }
 
 // Discard_pluggable_database_state removes any saved state for the PDB,
 // preventing auto-open on next CDB restart.
 func Discard_pluggable_database_state(ctx context.Context, db *sql.DB, pdb_name string) error {
-	sqlText := fmt.Sprintf("ALTER PLUGGABLE DATABASE %s DISCARD STATE", pdb_name)
-	_, err := db.ExecContext(ctx, sqlText)
+	sql_text := fmt.Sprintf("ALTER PLUGGABLE DATABASE %s DISCARD STATE", pdb_name)
+	_, err := db.ExecContext(ctx, sql_text)
 	return err
 }
 
 // Drop_pluggable_database_including_datafiles drops the PDB and removes its datafiles.
 // The PDB must be closed on all instances (in RAC) before this succeeds.
 func Drop_pluggable_database_including_datafiles(ctx context.Context, db *sql.DB, pdb_name string) error {
-	sqlText := fmt.Sprintf("DROP PLUGGABLE DATABASE %s INCLUDING DATAFILES", pdb_name)
-	_, err := db.ExecContext(ctx, sqlText)
+	sql_text := fmt.Sprintf("DROP PLUGGABLE DATABASE %s INCLUDING DATAFILES", pdb_name)
+	_, err := db.ExecContext(ctx, sql_text)
 	return err
 }
 
 // Verify_pluggable_database_dropped returns true if DBA_PDBS no longer has the PDB.
 func Verify_pluggable_database_dropped(ctx context.Context, db *sql.DB, pdb_name string) (bool, error) {
 	var cnt int
-	sqlText := fmt.Sprintf("SELECT COUNT(*) FROM DBA_PDBS WHERE PDB_NAME = UPPER('%s')", pdb_name)
-	if err := db.QueryRowContext(ctx, sqlText).Scan(&cnt); err != nil {
+	sql_text := fmt.Sprintf("SELECT COUNT(*) FROM DBA_PDBS WHERE PDB_NAME = UPPER('%s')", pdb_name)
+	if err := db.QueryRowContext(ctx, sql_text).Scan(&cnt); err != nil {
 		return false, err
 	}
 	return cnt == 0, nil
@@ -224,14 +224,14 @@ AND    s.con_id = (SELECT con_id FROM v$pdbs WHERE name = UPPER(:1))
 	defer rows.Close()
 
 	type sess struct {
-		instID int
-		sid    int
-		serial int
+		inst_id int
+		sid     int
+		serial  int
 	}
 	var sessions []sess
 	for rows.Next() {
 		var r sess
-		if err := rows.Scan(&r.instID, &r.sid, &r.serial); err != nil {
+		if err := rows.Scan(&r.inst_id, &r.sid, &r.serial); err != nil {
 			return err
 		}
 		sessions = append(sessions, r)
