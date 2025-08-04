@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	_ "github.com/godror/godror"
 	"github.com/PeterCullenBurbery/go_functions_002/v5/date_time_functions"
@@ -209,49 +210,148 @@ func Verify_pluggable_database_dropped(ctx context.Context, db *sql.DB, pdb_name
 	return cnt == 0, nil
 }
 
-// Kill_user_sessions_in_pdb terminates all USER sessions attached to the given PDB.
-func Kill_user_sessions_in_pdb(ctx context.Context, db *sql.DB, pdb_name string) error {
-	// gather sessions to kill
+// user_session represents a single USER session in a PDB.
+type user_session struct {
+	inst_id int
+	sid     int
+	serial  int
+	username string
+	status   string
+	machine  string
+	program  string
+	module   string
+}
+
+// Get_user_sessions returns all USER sessions attached to the given PDB.
+// Note: the returned struct and its fields are unexported (snake_case). If you
+// want callers in other packages to access fields directly, we can provide an
+// exported DTO or accessor helpers.
+func Get_user_sessions(ctx context.Context, db *sql.DB, pdb_name string) ([]user_session, error) {
 	const q = `
-SELECT s.inst_id, s.sid, s.serial#
+SELECT s.inst_id,
+       s.sid,
+       s.serial#,
+       NVL(s.username, ' '),
+       NVL(s.status,   ' '),
+       NVL(s.machine,  ' '),
+       NVL(s.program,  ' '),
+       NVL(s.module,   ' ')
 FROM   gv$session s
 WHERE  s.type = 'USER'
 AND    s.con_id = (SELECT con_id FROM v$pdbs WHERE name = UPPER(:1))
-`
+ORDER  BY s.inst_id, s.sid`
+
 	rows, err := db.QueryContext(ctx, q, pdb_name)
 	if err != nil {
-		return fmt.Errorf("querying sessions: %w", err)
+		return nil, fmt.Errorf("querying user sessions for %s: %w", pdb_name, err)
 	}
 	defer rows.Close()
 
-	type sess struct {
-		inst_id int
-		sid     int
-		serial  int
-	}
-	var sessions []sess
+	var sessions []user_session
 	for rows.Next() {
-		var r sess
-		if err := rows.Scan(&r.inst_id, &r.sid, &r.serial); err != nil {
-			return err
+		var us user_session
+		if err := rows.Scan(
+			&us.inst_id,
+			&us.sid,
+			&us.serial,
+			&us.username,
+			&us.status,
+			&us.machine,
+			&us.program,
+			&us.module,
+		); err != nil {
+			return nil, err
 		}
-		sessions = append(sessions, r)
+		sessions = append(sessions, us)
 	}
 	if err := rows.Err(); err != nil {
-		return err
+		return nil, err
 	}
 
-	// kill sessions
-	for _, s := range sessions {
-		kill := fmt.Sprintf("ALTER SYSTEM KILL SESSION '%d,%d' IMMEDIATE", s.sid, s.serial)
-		// In RAC, optionally: "ALTER SYSTEM KILL SESSION 'sid,serial#,@inst_id' IMMEDIATE"
-		// if you need to target specific instance. Uncomment and modify if required.
-		if _, err := db.ExecContext(ctx, kill); err != nil {
-			log.Printf("⚠️ Failed to kill session sid=%d serial=%d: %v", s.sid, s.serial, err)
-		}
-	}
-	return nil
+	return sessions, nil
 }
+
+// Kill_user_sessions_in_pdb terminates all USER sessions attached to the given PDB (single pass).
+func Kill_user_sessions_in_pdb(ctx context.Context, db *sql.DB, pdb_name string) error {
+    sessions, err := Get_user_sessions(ctx, db, pdb_name)
+    if err != nil {
+        return fmt.Errorf("querying user sessions for %s: %w", pdb_name, err)
+    }
+    if len(sessions) == 0 {
+        log.Printf("✓ No USER sessions found in %s.", pdb_name)
+        return nil
+    }
+
+    for _, us := range sessions {
+        kill := fmt.Sprintf("ALTER SYSTEM KILL SESSION '%d,%d' IMMEDIATE", us.sid, us.serial)
+        // RAC note: to target a specific instance use 'sid,serial#,@inst_id'
+        if _, err := db.ExecContext(ctx, kill); err != nil {
+            log.Printf("⚠️ Failed to kill session sid=%d serial=%d (inst=%d): %v",
+                us.sid, us.serial, us.inst_id, err)
+        }
+    }
+    return nil
+}
+
+
+// Kill_user_sessions_in_pdb_until_gone keeps killing USER sessions in the PDB until none remain
+// or until max_attempts (default: 100) is reached. It rechecks with Get_user_sessions between attempts.
+// wait_between_attempts controls the sleep duration between attempts.
+func Kill_user_sessions_in_pdb_until_gone(
+    ctx context.Context,
+    db *sql.DB,
+    pdb_name string,
+    max_attempts int,
+    wait_between_attempts time.Duration,
+) error {
+
+    if max_attempts <= 0 {
+        max_attempts = 100
+    }
+    if wait_between_attempts <= 0 {
+        wait_between_attempts = 300 * time.Millisecond
+    }
+
+    for attempt := 1; attempt <= max_attempts; attempt++ {
+        sessions, err := Get_user_sessions(ctx, db, pdb_name)
+        if err != nil {
+            return fmt.Errorf("attempt %d: querying user sessions for %s: %w", attempt, pdb_name, err)
+        }
+
+        if len(sessions) == 0 {
+            log.Printf("✓ No USER sessions remain in %s (after %d attempt(s)).", pdb_name, attempt-1)
+            return nil
+        }
+
+        log.Printf("🔎 Attempt %d/%d: %d USER session(s) found in %s. Killing...",
+            attempt, max_attempts, len(sessions), pdb_name)
+
+        // Kill all visible sessions this round
+        for _, us := range sessions {
+            kill := fmt.Sprintf("ALTER SYSTEM KILL SESSION '%d,%d' IMMEDIATE", us.sid, us.serial)
+            if _, err := db.ExecContext(ctx, kill); err != nil {
+                log.Printf("⚠️ Failed to kill session sid=%d serial=%d (inst=%d): %v",
+                    us.sid, us.serial, us.inst_id, err)
+            }
+        }
+
+        // Short pause before re-checking
+        time.Sleep(wait_between_attempts)
+    }
+
+    // Final check and error
+    remaining, err := Get_user_sessions(ctx, db, pdb_name)
+    if err != nil {
+        return fmt.Errorf("final check: querying user sessions for %s: %w", pdb_name, err)
+    }
+    if len(remaining) == 0 {
+        log.Printf("✓ No USER sessions remain in %s (after %d attempts).", pdb_name, max_attempts)
+        return nil
+    }
+    return fmt.Errorf("after %d attempts, %d USER session(s) still remain in %s",
+        max_attempts, len(remaining), pdb_name)
+}
+
 
 // -------------------------------
 // Utility
