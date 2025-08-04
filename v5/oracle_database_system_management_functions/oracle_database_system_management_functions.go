@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	_ "github.com/godror/godror"
+	"github.com/PeterCullenBurbery/go_functions_002/v5/date_time_functions"
 )
 
 // -------------------------------
@@ -274,4 +275,105 @@ func normalize_for_compare(p string) string {
 
 func escape_single_quotes(s string) string {
 	return strings.ReplaceAll(s, `'`, `''`)
+}
+
+// Create_open_save_state_pdb_from_seed generates a PDB name using
+// date_time_functions.Generate_pdb_name_from_timestamp(), creates the PDB from PDB$SEED,
+// opens it READ WRITE, saves state, and returns (pdb_name, dest_dir).
+func Create_open_save_state_pdb_from_seed(
+	ctx context.Context,
+	db *sql.DB,
+	admin_user string,
+	admin_password string,
+) (string, string, error) {
+
+	// Ensure we're in CDB$ROOT and PDBSEED path is sane
+	if err := Ensure_connected_to_cdb_root(ctx, db); err != nil {
+		return "", "", err
+	}
+	if err := Verify_pdbseed_directory_matches_expected(ctx, db); err != nil {
+		return "", "", err
+	}
+
+	// Generate name (pdb_YYYY_MMM_DDD_HHH_MMM_SSS)
+	pdb_name, err := date_time_functions.Generate_pdb_name_from_timestamp()
+	if err != nil {
+		return "", "", fmt.Errorf("generate pdb name: %w", err)
+	}
+
+	// Create from seed (returns destination directory)
+	dest_dir, err := Create_pluggable_database_from_seed(ctx, db, pdb_name, admin_user, admin_password)
+	if err != nil {
+		return "", "", err
+	}
+
+	// Open READ WRITE
+	if err := Open_pluggable_database_read_write(ctx, db, pdb_name); err != nil {
+		return "", "", fmt.Errorf("open pdb read write: %w", err)
+	}
+
+	// Save state
+	if err := Save_pluggable_database_state(ctx, db, pdb_name); err != nil {
+		return "", "", fmt.Errorf("save pdb state: %w", err)
+	}
+
+	return pdb_name, dest_dir, nil
+}
+
+// Teardown_drop_pdb closes, discards state, and drops a PDB INCLUDING DATAFILES.
+// If kill_sessions is true, it will attempt to terminate USER sessions in that PDB first.
+// If instances_all is true, CLOSE IMMEDIATE will be issued with INSTANCES=ALL (for RAC).
+// The function also verifies the drop via DBA_PDBS.
+func Teardown_drop_pdb(
+	ctx context.Context,
+	db *sql.DB,
+	pdb_name string,
+	instances_all bool,
+	kill_sessions bool,
+) error {
+
+	// Must be in CDB$ROOT to manage PDBs
+	if err := Ensure_connected_to_cdb_root(ctx, db); err != nil {
+		return err
+	}
+
+	// Optionally kill active USER sessions to avoid close failures
+	if kill_sessions {
+		if err := Kill_user_sessions_in_pdb(ctx, db, pdb_name); err != nil {
+			return fmt.Errorf("kill sessions in %s: %w", pdb_name, err)
+		}
+	}
+
+	// Try to close; if it fails due to sessions, try killing and retry once
+	if err := Close_pluggable_database_immediate(ctx, db, pdb_name, instances_all); err != nil {
+		// one retry path: attempt to kill sessions and close again
+		if !kill_sessions {
+			_ = Kill_user_sessions_in_pdb(ctx, db, pdb_name) // best effort
+		}
+		if err2 := Close_pluggable_database_immediate(ctx, db, pdb_name, instances_all); err2 != nil {
+			return fmt.Errorf("close pdb %s: %w", pdb_name, err2)
+		}
+	}
+
+	// Discard auto-open state (ignore error if none was saved)
+	if err := Discard_pluggable_database_state(ctx, db, pdb_name); err != nil {
+		// non-fatal; continue drop anyway
+		log.Printf("⚠️ DISCARD STATE for %s returned: %v (continuing)", pdb_name, err)
+	}
+
+	// Drop INCLUDING DATAFILES
+	if err := Drop_pluggable_database_including_datafiles(ctx, db, pdb_name); err != nil {
+		return fmt.Errorf("drop pdb %s INCLUDING DATAFILES: %w", pdb_name, err)
+	}
+
+	// Verify gone
+	gone, err := Verify_pluggable_database_dropped(ctx, db, pdb_name)
+	if err != nil {
+		return fmt.Errorf("verify drop for %s: %w", pdb_name, err)
+	}
+	if !gone {
+		return fmt.Errorf("drop not confirmed: %s still appears in DBA_PDBS", pdb_name)
+	}
+
+	return nil
 }
