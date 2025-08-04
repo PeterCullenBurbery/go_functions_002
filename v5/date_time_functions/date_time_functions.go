@@ -212,8 +212,9 @@ public class date_time_stamp {
         // Build underscore string:
         // YYYY_MMM_DDD_HHH_MMM_SSS_NNNNNNNNN_TimeZone_ISOYEAR_WWWW_WEEKDAY_YYYY_DOY
         String out = String.format(
-            "%s_%s_%s_%s_%s_%s_%s_%s_W%03d_%03d_%s_%s",
-            year, month, day, hour, minute, second, nano, tzId, isoWeek, isoDOW, year, doy
+            "%s_%s_%s_%s_%s_%s_%s_%s_%04d_W%03d_%03d_%s_%s",
+            year, month, day, hour, minute, second, nano, tzId,
+            isoYear, isoWeek, isoDOW, year, doy
         );
 
         System.out.println(out);
