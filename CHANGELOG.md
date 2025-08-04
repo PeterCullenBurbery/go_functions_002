@@ -10,6 +10,10 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [5.6.0] - 2025-008-004 018.010.019.137330700 America/New_York 2025-W032-001 2025-216
+
+- Generate_prefixed_timestamp() added.
+
 ## [5.5.0] - 2025-008-004 014.033.027.485938400 America/New_York 2025-W032-001 2025-216
 
 ### Added
