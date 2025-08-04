@@ -10,6 +10,10 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [5.4.1] - 2025-008-004 008.014.058.855321700 America/New_York 2025-W032-001 2025-216
+
+- update README.md. The links at the top were not spaced out properly.
+
 ## [5.4.0] - 2025-008-004 008.007.016.794655300 America/New_York 2025-W032-001 2025-216
 
 ### Added
