@@ -10,6 +10,10 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [5.8.0] - 2025-008-005 021.000.039.944783600 America/New_York 2025-W032-002 2025-217
+
+- Get_dash_separated_timestamp() added.
+
 ## [5.7.0] - 2025-008-004 019.005.016.766838600 America/New_York 2025-W032-001 2025-216
 
 - Updated Get_timestamp to work. Updated Get_timestamp to return correct value successfully. Issue with USER_SLASH_SCHEMA_2025_008_004_018_015_040_358896100_AMERICA_SLASH_NEW_YORK_W032_001_2025_216 where iso week date was messed up. Now it will return USER_SLASH_SCHEMA_2025_008_004_018_015_040_358896100_AMERICA_SLASH_NEW_YORK_2025_W032_001_2025_216 instead of USER_SLASH_SCHEMA_2025_008_004_018_015_040_358896100_AMERICA_SLASH_NEW_YORK_W032_001_2025_216. This is a major change ; a major fix and an important change. Therefore, I am marking it as .7, not .6.1.
