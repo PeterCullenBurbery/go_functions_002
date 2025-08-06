@@ -41,6 +41,8 @@ go get github.com/PeterCullenBurbery/go_functions_002/v5
 - **`Format_now()`** – Returns current time in `"2006-01-02 15:04:05"` format.
 - **`Safe_time_stamp()`** – Produces a safe filename timestamp (replaces `/` with ` slash `).
 - **`Generate_pdb_name_from_timestamp()`** – Generates a unique PDB name from the current timestamp.
+- **`Get_timestamp()`** – Returns an underscore-delimited, time zone–aware, nanosecond-precision timestamp like `2025_008_004_014_017_048_822529300_America_slash_New_York_2025_W032_001_2025_216`.
+- **`Get_dash_separated_timestamp()`** – Returns a dash-separated timestamp like `2025-008-005-020-058-035-258752600-America-slash-New-York-2025-W032-002-2025-217`.
 
 ---
 
