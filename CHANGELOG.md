@@ -13,6 +13,7 @@ I wasn't using ChatGPT/AI to write commits until 3.4.0.
 ## [5.8.0] - 2025-008-005 021.000.039.944783600 America/New_York 2025-W032-002 2025-217
 
 - Get_dash_separated_timestamp() added.
+- README.md updated.
 
 ## [5.7.0] - 2025-008-004 019.005.016.766838600 America/New_York 2025-W032-001 2025-216
 
