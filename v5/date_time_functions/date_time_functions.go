@@ -229,7 +229,7 @@ public class date_time_stamp {
         System.out.println(output);
     }
 }
-}`
+`
 
 	if err := os.WriteFile(java_file_path, []byte(java_code), 0644); err != nil {
 		return "", fmt.Errorf("❌ Failed to write Java file: %w", err)
