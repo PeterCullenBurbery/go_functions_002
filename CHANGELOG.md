@@ -10,6 +10,12 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [5.9.1] - 2025_008_008_019_022_030_381335500_America_slash_New_York_2025_W032_005_2025_220_1754695350_381335500
+
+### Fixed
+- Removed trailing backtick inside embedded Java source in `Get_timestamp` function to fix Java compilation errors.
+- Removed stray trailing backtick from embedded Java source code in `Get_timestamp()` function to fix Java compilation errors.
+
 ## [5.9.0] - 2025_008_008_019_004_059_258318600_America_slash_New_York_2025_W032_005_2025_220_1754694299_258318600
 
 ### Fixed / Updated
