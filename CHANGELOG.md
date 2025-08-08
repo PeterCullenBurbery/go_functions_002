@@ -10,6 +10,16 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [5.9.0] - 2025_008_008_019_004_059_258318600_America_slash_New_York_2025_W032_005_2025_220_1754694299_258318600
+
+### Fixed / Updated
+- Updated `Get_timestamp()` to append Unix epoch seconds and nanoseconds as separate underscore-delimited fields at the end of the timestamp string.
+- The format is now:
+  `YYYY_MMM_DDD_HHH_MMM_SSS_NNNNNNNNN_TimeZone_ISOYEAR_WWWW_WEEKDAY_YYYY_DOY_UnixSeconds_Nanoseconds`
+- Example output:
+  `2025_008_008_018_017_027_043312600_America_slash_New_York_2025_W032_005_2025_220_1754691447_043312600`
+- This change improves timestamp precision and facilitates exact time parsing or comparisons.
+
 ## [5.8.0] - 2025-008-005 021.000.039.944783600 America/New_York 2025-W032-002 2025-217
 
 - Get_dash_separated_timestamp() added.
