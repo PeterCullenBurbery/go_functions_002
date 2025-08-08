@@ -118,7 +118,8 @@ func Safe_time_stamp(timestamp string, mode int) string {
 // pdb_<YYYY>_<MMM>_<DDD>_<HHH>_<MMM>_<SSS>
 //
 // Example:
-//     pdb_2025_007_031_017_020_008
+//
+//	pdb_2025_007_031_017_020_008
 func Generate_pdb_name_from_timestamp() (string, error) {
 	// Ensure Java is installed if needed for time zone detection
 	if err := system_management_functions.Install_Java(); err != nil {
@@ -140,44 +141,48 @@ func Generate_pdb_name_from_timestamp() (string, error) {
 	return fmt.Sprintf("pdb_%d_%s_%s_%s_%s_%s", year, month, day, hour, minute, second), nil
 }
 
-// Get_timestamp returns an underscore-delimited, TZ-aware, nanosecond-precision stamp like:
-// 2025_008_004_014_017_048_822529300_America_slash_New_York_2025_W032_001_2025_216
+// Get_timestamp returns an underscore-delimited, timezone-aware, nanosecond-precision timestamp string,
+// formatted as:
+// YYYY_MMM_DDD_HHH_MMM_SSS_NNNNNNNNN_TimeZone_ISOYEAR_WWWW_WEEKDAY_YYYY_DOY_UnixSeconds_Nanoseconds
+//
+// Example:
+// 2025_008_004_014_017_048_822529300_America_slash_New_York_2025_W032_001_2025_216_1754681668_822529300
 func Get_timestamp() (string, error) {
-    // Ensure Java is installed
-    if err := system_management_functions.Install_Java(); err != nil {
-        return "", fmt.Errorf("❌ Java installation failed: %w", err)
-    }
+	// Ensure Java is installed
+	if err := system_management_functions.Install_Java(); err != nil {
+		return "", fmt.Errorf("❌ Java installation failed: %w", err)
+	}
 
-    // Try to find java and javac from PATH
-    java_cmd, err_java := exec.LookPath("java")
-    javac_cmd, err_javac := exec.LookPath("javac")
+	// Try to find java and javac from PATH
+	java_cmd, err_java := exec.LookPath("java")
+	javac_cmd, err_javac := exec.LookPath("javac")
 
-    // If either is missing, fallback to known Adoptium path
-    if err_java != nil || err_javac != nil {
-        fallback_base := `C:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot\bin`
-        java_fallback := filepath.Join(fallback_base, "java.exe")
-        javac_fallback := filepath.Join(fallback_base, "javac.exe")
+	// If either is missing, fallback to known Adoptium path
+	if err_java != nil || err_javac != nil {
+		fallback_base := `C:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot\bin`
+		java_fallback := filepath.Join(fallback_base, "java.exe")
+		javac_fallback := filepath.Join(fallback_base, "javac.exe")
 
-        if system_management_functions.File_exists(java_fallback) && system_management_functions.File_exists(javac_fallback) {
-            java_cmd = java_fallback
-            javac_cmd = javac_fallback
-        } else {
-            return "", fmt.Errorf("❌ Could not locate java or javac in PATH or fallback directory")
-        }
-    }
+		if system_management_functions.File_exists(java_fallback) && system_management_functions.File_exists(javac_fallback) {
+			java_cmd = java_fallback
+			javac_cmd = javac_fallback
+		} else {
+			return "", fmt.Errorf("❌ Could not locate java or javac in PATH or fallback directory")
+		}
+	}
 
-    // Create temp directory for Java source and class files
-    temp_dir, err := os.MkdirTemp("", "date_time_stamp")
-    if err != nil {
-        return "", fmt.Errorf("❌ Failed to create temp directory: %w", err)
-    }
-    defer os.RemoveAll(temp_dir)
+	// Create temp directory for Java source and class files
+	temp_dir, err := os.MkdirTemp("", "date_time_stamp")
+	if err != nil {
+		return "", fmt.Errorf("❌ Failed to create temp directory: %w", err)
+	}
+	defer os.RemoveAll(temp_dir)
 
-    const java_file_name = "date_time_stamp.java"
-    const class_name = "date_time_stamp"
-    java_file_path := filepath.Join(temp_dir, java_file_name)
+	const java_file_name = "date_time_stamp.java"
+	const class_name = "date_time_stamp"
+	java_file_path := filepath.Join(temp_dir, java_file_name)
 
-    java_code := `import java.time.*;
+	java_code := `import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 
@@ -209,95 +214,100 @@ public class date_time_stamp {
         // TZ id with _slash_ instead of /
         String tzId = tz.getId().replace("/", "_slash_");
 
+        // Unix timestamp seconds and nanoseconds separately, joined by underscore
+        long unix_seconds = now.toEpochSecond();
+        int nanos = now.getNano();
+        String unix_timestamp_string = String.format("%d_%09d", unix_seconds, nanos);
+
         // Build underscore string:
-        // YYYY_MMM_DDD_HHH_MMM_SSS_NNNNNNNNN_TimeZone_ISOYEAR_WWWW_WEEKDAY_YYYY_DOY
-        String out = String.format(
-            "%s_%s_%s_%s_%s_%s_%s_%s_%04d_W%03d_%03d_%s_%s",
-            year, month, day, hour, minute, second, nano, tzId,
-            isoYear, isoWeek, isoDOW, year, doy
-        );
+        // YYYY_MMM_DDD_HHH_MMM_SSS_NNNNNNNNN_TimeZone_ISOYEAR_WWWW_WEEKDAY_YYYY_DOY_UnixSeconds_Nanoseconds
+        String output = String.format(
+                "%s_%s_%s_%s_%s_%s_%s_%s_%04d_W%03d_%03d_%s_%s_%s",
+                year, month, day, hour, minute, second, nano, tzId,
+                isoYear, isoWeek, isoDOW, year, doy, unix_timestamp_string);
 
-        System.out.println(out);
+        System.out.println(output);
     }
-}`;
+}
+}`
 
-    if err := os.WriteFile(java_file_path, []byte(java_code), 0644); err != nil {
-        return "", fmt.Errorf("❌ Failed to write Java file: %w", err)
-    }
+	if err := os.WriteFile(java_file_path, []byte(java_code), 0644); err != nil {
+		return "", fmt.Errorf("❌ Failed to write Java file: %w", err)
+	}
 
-    // Compile
-    cmd_compile := exec.Command(javac_cmd, java_file_name)
-    cmd_compile.Dir = temp_dir
-    if err := cmd_compile.Run(); err != nil {
-        return "", fmt.Errorf("❌ Failed to compile Java file: %w", err)
-    }
+	// Compile
+	cmd_compile := exec.Command(javac_cmd, java_file_name)
+	cmd_compile.Dir = temp_dir
+	if err := cmd_compile.Run(); err != nil {
+		return "", fmt.Errorf("❌ Failed to compile Java file: %w", err)
+	}
 
-    // Run
-    cmd_run := exec.Command(java_cmd, class_name)
-    cmd_run.Dir = temp_dir
-    var output_buffer bytes.Buffer
-    cmd_run.Stdout = &output_buffer
-    cmd_run.Stderr = &output_buffer
+	// Run
+	cmd_run := exec.Command(java_cmd, class_name)
+	cmd_run.Dir = temp_dir
+	var output_buffer bytes.Buffer
+	cmd_run.Stdout = &output_buffer
+	cmd_run.Stderr = &output_buffer
 
-    if err := cmd_run.Run(); err != nil {
-        return "", fmt.Errorf("❌ Failed to run Java class: %w\nOutput:\n%s", err, output_buffer.String())
-    }
+	if err := cmd_run.Run(); err != nil {
+		return "", fmt.Errorf("❌ Failed to run Java class: %w\nOutput:\n%s", err, output_buffer.String())
+	}
 
-    return strings.TrimSpace(output_buffer.String()), nil
+	return strings.TrimSpace(output_buffer.String()), nil
 }
 
 // Generate_prefixed_timestamp returns "<prefix>_YYYY_MMM_DDD_HHH_MMM_SSS_NNNNNNNNN_TimeZone_ISOYEAR_WWWW_WEEKDAY_YYYY_DOY".
 // It reuses Get_timestamp() for the core, ensuring identical formatting and TZ handling.
 func Generate_prefixed_timestamp(prefix string) (string, error) {
-        ts, err := Get_timestamp()
-        if err != nil {
-                return "", err
-        }
-        // If no prefix provided, just return the timestamp.
-        if strings.TrimSpace(prefix) == "" {
-                return ts, nil
-        }
-        return prefix + "_" + ts, nil
+	ts, err := Get_timestamp()
+	if err != nil {
+		return "", err
+	}
+	// If no prefix provided, just return the timestamp.
+	if strings.TrimSpace(prefix) == "" {
+		return ts, nil
+	}
+	return prefix + "_" + ts, nil
 }
 
 // Get_dash_separated_timestamp returns a dash-delimited, TZ-aware, nanosecond-precision stamp like:
 // 2025-008-005-020-058-035-258752600-America-slash-New-York-2025-W032-002-2025-217
 func Get_dash_separated_timestamp() (string, error) {
-    // Ensure Java is installed
-    if err := system_management_functions.Install_Java(); err != nil {
-        return "", fmt.Errorf("❌ Java installation failed: %w", err)
-    }
+	// Ensure Java is installed
+	if err := system_management_functions.Install_Java(); err != nil {
+		return "", fmt.Errorf("❌ Java installation failed: %w", err)
+	}
 
-    // Try to find java and javac from PATH
-    java_cmd, err_java := exec.LookPath("java")
-    javac_cmd, err_javac := exec.LookPath("javac")
+	// Try to find java and javac from PATH
+	java_cmd, err_java := exec.LookPath("java")
+	javac_cmd, err_javac := exec.LookPath("javac")
 
-    // If either is missing, fallback to known Adoptium path
-    if err_java != nil || err_javac != nil {
-        fallback_base := `C:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot\bin`
-        java_fallback := filepath.Join(fallback_base, "java.exe")
-        javac_fallback := filepath.Join(fallback_base, "javac.exe")
+	// If either is missing, fallback to known Adoptium path
+	if err_java != nil || err_javac != nil {
+		fallback_base := `C:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot\bin`
+		java_fallback := filepath.Join(fallback_base, "java.exe")
+		javac_fallback := filepath.Join(fallback_base, "javac.exe")
 
-        if system_management_functions.File_exists(java_fallback) && system_management_functions.File_exists(javac_fallback) {
-            java_cmd = java_fallback
-            javac_cmd = javac_fallback
-        } else {
-            return "", fmt.Errorf("❌ Could not locate java or javac in PATH or fallback directory")
-        }
-    }
+		if system_management_functions.File_exists(java_fallback) && system_management_functions.File_exists(javac_fallback) {
+			java_cmd = java_fallback
+			javac_cmd = javac_fallback
+		} else {
+			return "", fmt.Errorf("❌ Could not locate java or javac in PATH or fallback directory")
+		}
+	}
 
-    // Create temp directory
-    temp_dir, err := os.MkdirTemp("", "dash_separated_timestamp")
-    if err != nil {
-        return "", fmt.Errorf("❌ Failed to create temp directory: %w", err)
-    }
-    defer os.RemoveAll(temp_dir)
+	// Create temp directory
+	temp_dir, err := os.MkdirTemp("", "dash_separated_timestamp")
+	if err != nil {
+		return "", fmt.Errorf("❌ Failed to create temp directory: %w", err)
+	}
+	defer os.RemoveAll(temp_dir)
 
-    const java_file_name = "dash_separated_timestamp.java"
-    const class_name = "dash_separated_timestamp"
-    java_file_path := filepath.Join(temp_dir, java_file_name)
+	const java_file_name = "dash_separated_timestamp.java"
+	const class_name = "dash_separated_timestamp"
+	java_file_path := filepath.Join(temp_dir, java_file_name)
 
-    java_code := `import java.time.*;
+	java_code := `import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 
@@ -330,27 +340,27 @@ public class dash_separated_timestamp {
     }
 }`
 
-    if err := os.WriteFile(java_file_path, []byte(java_code), 0644); err != nil {
-        return "", fmt.Errorf("❌ Failed to write Java file: %w", err)
-    }
+	if err := os.WriteFile(java_file_path, []byte(java_code), 0644); err != nil {
+		return "", fmt.Errorf("❌ Failed to write Java file: %w", err)
+	}
 
-    // Compile
-    cmd_compile := exec.Command(javac_cmd, java_file_name)
-    cmd_compile.Dir = temp_dir
-    if err := cmd_compile.Run(); err != nil {
-        return "", fmt.Errorf("❌ Failed to compile Java file: %w", err)
-    }
+	// Compile
+	cmd_compile := exec.Command(javac_cmd, java_file_name)
+	cmd_compile.Dir = temp_dir
+	if err := cmd_compile.Run(); err != nil {
+		return "", fmt.Errorf("❌ Failed to compile Java file: %w", err)
+	}
 
-    // Run
-    cmd_run := exec.Command(java_cmd, class_name)
-    cmd_run.Dir = temp_dir
-    var output_buffer bytes.Buffer
-    cmd_run.Stdout = &output_buffer
-    cmd_run.Stderr = &output_buffer
+	// Run
+	cmd_run := exec.Command(java_cmd, class_name)
+	cmd_run.Dir = temp_dir
+	var output_buffer bytes.Buffer
+	cmd_run.Stdout = &output_buffer
+	cmd_run.Stderr = &output_buffer
 
-    if err := cmd_run.Run(); err != nil {
-        return "", fmt.Errorf("❌ Failed to run Java class: %w\nOutput:\n%s", err, output_buffer.String())
-    }
+	if err := cmd_run.Run(); err != nil {
+		return "", fmt.Errorf("❌ Failed to run Java class: %w\nOutput:\n%s", err, output_buffer.String())
+	}
 
-    return strings.TrimSpace(output_buffer.String()), nil
+	return strings.TrimSpace(output_buffer.String()), nil
 }
