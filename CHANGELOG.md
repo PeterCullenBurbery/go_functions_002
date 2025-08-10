@@ -10,6 +10,10 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
+## [6.0.1] - 2025_008_010_008_048_008_652373500_America_slash_New_York_2025_W032_007_2025_222_1754830088_652373500
+
+- README.md updated to say that the most up to date documentation [go_functions_002](https://pkg.go.dev/github.com/PeterCullenBurbery/go_functions_002/v6).
+
 ## [6.0.0] - 2025_008_010_007_058_020_640855200_America_slash_New_York_2025_W032_007_2025_222_1754827100_640855200
 
 ### Added
