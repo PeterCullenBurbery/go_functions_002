@@ -10,6 +10,10 @@
 
 ---
 
+For the most up to date docs, please visit [go_functions_002](https://pkg.go.dev/github.com/PeterCullenBurbery/go_functions_002/v6).
+
+---
+
 ## 📖 Overview
 
 `go_functions_002` is a utility library written in Go, offering a wide range of functions for:
