@@ -10,12 +10,20 @@ After 3.3.4, versions become more certain.
 
 I wasn't using ChatGPT/AI to write commits until 3.4.0.
 
-## [6.0.0] - 2025_008_010_007_053_034_139995000_America_slash_New_York_2025_W032_007_2025_222_1754826814_139995000
+## [6.0.0] - 2025_008_010_007_058_020_640855200_America_slash_New_York_2025_W032_007_2025_222_1754827100_640855200
 
 ### Added
-- Added folder for version 6.
-- Removed folder for v5.
-notes go here
+- Created **`Get_primary_ipv4_address_underscore`** in the Go `date_time_functions` package.
+  - Returns the most appropriate local IPv4 address, formatted with zero-padded octets and underscores (e.g., `192_168_004_042`).
+  - Uses the same preferred/excluded interface logic as `Get_primary_ipv4_address`.
+  - Matches PowerShell’s `Get-PrimaryIPv4AddressUnderscore` behavior for consistent output across languages.
+- Added `format_ipv4_underscore` helper function for converting standard IPv4 strings into underscore-delimited form.
+
+### Changed
+- Added folder for version 6; removed folder for version 5.
+
+### Breaking Changes
+- v5 folder removed; consumers must now import from v6.
 
 ## [5.9.1] - 2025_008_008_019_022_030_381335500_America_slash_New_York_2025_W032_005_2025_220_1754695350_381335500
 
