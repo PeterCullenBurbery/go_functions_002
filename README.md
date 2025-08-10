@@ -10,7 +10,7 @@
 
 ---
 
-For the most up to date docs, please visit [go_functions_002](https://pkg.go.dev/github.com/PeterCullenBurbery/go_functions_002/v6).
+For the most up to date documentation, please visit [go_functions_002](https://pkg.go.dev/github.com/PeterCullenBurbery/go_functions_002/v6).
 
 ---
 
