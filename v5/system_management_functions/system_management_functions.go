@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"net/http"
 	"strings"
+	"strconv"
 	"syscall"
 	"time"
 	"unsafe"
@@ -2156,6 +2157,80 @@ func is_excluded_interface(interface_name string, excluded_keywords []string) bo
 		}
 	}
 	return false
+}
+
+// Get_primary_ipv4_address_underscore returns the most appropriate local IPv4 address
+// from the available network interfaces, formatted with underscores and zero-padded octets
+// (e.g., "192_168_004_042").
+//
+// It prioritizes interfaces whose names contain preferred keywords such as
+// "Wi-Fi", "Ethernet", or "Tailscale", and excludes interfaces that are
+// likely virtual, loopback, or otherwise irrelevant, such as those containing
+// "VMware", "Virtual", "Bluetooth", "Loopback", "OpenVPN", or "Disconnected".
+//
+// The function performs the following steps:
+//   1. Lists all active, non-loopback interfaces.
+//   2. Filters out interfaces matching any excluded keywords.
+//   3. Searches for an interface whose name contains a preferred keyword.
+//   4. Falls back to any remaining valid interface if no preferred one is found.
+//   5. Returns the first usable IPv4 address found, formatted with underscores.
+//
+// Returns the formatted IPv4 address as a string, or an empty string if none are found.
+// If an error occurs while listing interfaces, it is returned.
+func Get_primary_ipv4_address_underscore() (string, error) {
+	preferred_keywords := []string{"Wi-Fi", "Ethernet", "Tailscale"}
+	excluded_keywords := []string{"VMware", "Virtual", "Bluetooth", "Loopback", "OpenVPN", "Disconnected"}
+
+	all_interfaces, err := net.Interfaces()
+	if err != nil {
+		return "", fmt.Errorf("❌ failed to get network interfaces: %w", err)
+	}
+
+	var candidates []net.Interface
+
+	// Step 1: Filter interfaces that are up and not excluded
+	for _, iface := range all_interfaces {
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		if is_excluded_interface(iface.Name, excluded_keywords) {
+			continue
+		}
+		candidates = append(candidates, iface)
+	}
+
+	// Step 2: Try preferred keywords
+	for _, keyword := range preferred_keywords {
+		for _, iface := range candidates {
+			if strings.Contains(strings.ToLower(iface.Name), strings.ToLower(keyword)) {
+				ip, err := get_ipv4_from_interface(iface)
+				if err == nil && ip != "" {
+					return format_ipv4_underscore(ip), nil
+				}
+			}
+		}
+	}
+
+	// Step 3: Fallback to any remaining candidate
+	for _, iface := range candidates {
+		ip, err := get_ipv4_from_interface(iface)
+		if err == nil && ip != "" {
+			return format_ipv4_underscore(ip), nil
+		}
+	}
+
+	return "", nil
+}
+
+// format_ipv4_underscore takes a standard IPv4 string and returns it
+// with zero-padded octets and underscores (e.g., "192_168_004_042").
+func format_ipv4_underscore(ip string) string {
+	octets := strings.Split(ip, ".")
+	for i := range octets {
+		val, _ := strconv.Atoi(octets[i])
+		octets[i] = fmt.Sprintf("%03d", val)
+	}
+	return strings.Join(octets, "_")
 }
 
 // Restart_file_explorer uses PowerShell to stop and restart Windows File Explorer,
