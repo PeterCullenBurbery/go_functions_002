@@ -1,7 +1,7 @@
 # go_functions_002
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)  
-[![Go Reference](https://pkg.go.dev/badge/github.com/PeterCullenBurbery/go_functions_002/v5.svg)](https://pkg.go.dev/github.com/PeterCullenBurbery/go_functions_002/v5)  
+[![Go Reference](https://pkg.go.dev/badge/github.com/PeterCullenBurbery/go_functions_002/v6.svg)](https://pkg.go.dev/github.com/PeterCullenBurbery/go_functions_002/v6)  
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.16734055.svg)](https://doi.org/10.5281/zenodo.16734055)
 
 **Author:** Peter Cullen Burbery  
@@ -29,7 +29,7 @@ This package is designed for automation, system configuration, database manageme
 ## 📦 Installation
 
 ```bash
-go get github.com/PeterCullenBurbery/go_functions_002/v5
+go get github.com/PeterCullenBurbery/go_functions_002/v6
 ```
 
 ---
@@ -216,8 +216,8 @@ import (
     "fmt"
     "log"
 
-    "github.com/PeterCullenBurbery/go_functions_002/v5/system_management_functions"
-    "github.com/PeterCullenBurbery/go_functions_002/v5/date_time_functions"
+    "github.com/PeterCullenBurbery/go_functions_002/v6/system_management_functions"
+    "github.com/PeterCullenBurbery/go_functions_002/v6/date_time_functions"
 )
 
 func main() {
@@ -250,7 +250,7 @@ go_functions_002/
 ├── CITATION.cff
 ├── LICENSE
 ├── README.md
-└── v5
+└── v6
     ├── go.mod
     ├── go.sum
     ├── date_time_functions/

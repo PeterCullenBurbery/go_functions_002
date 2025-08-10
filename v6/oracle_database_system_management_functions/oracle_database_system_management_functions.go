@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PeterCullenBurbery/go_functions_002/v6/date_time_functions"
 	_ "github.com/godror/godror"
-	"github.com/PeterCullenBurbery/go_functions_002/v5/date_time_functions"
 )
 
 // -------------------------------
@@ -212,9 +212,9 @@ func Verify_pluggable_database_dropped(ctx context.Context, db *sql.DB, pdb_name
 
 // user_session represents a single USER session in a PDB.
 type user_session struct {
-	inst_id int
-	sid     int
-	serial  int
+	inst_id  int
+	sid      int
+	serial   int
 	username string
 	status   string
 	machine  string
@@ -273,85 +273,83 @@ ORDER  BY s.inst_id, s.sid`
 
 // Kill_user_sessions_in_pdb terminates all USER sessions attached to the given PDB (single pass).
 func Kill_user_sessions_in_pdb(ctx context.Context, db *sql.DB, pdb_name string) error {
-    sessions, err := Get_user_sessions(ctx, db, pdb_name)
-    if err != nil {
-        return fmt.Errorf("querying user sessions for %s: %w", pdb_name, err)
-    }
-    if len(sessions) == 0 {
-        log.Printf("✓ No USER sessions found in %s.", pdb_name)
-        return nil
-    }
+	sessions, err := Get_user_sessions(ctx, db, pdb_name)
+	if err != nil {
+		return fmt.Errorf("querying user sessions for %s: %w", pdb_name, err)
+	}
+	if len(sessions) == 0 {
+		log.Printf("✓ No USER sessions found in %s.", pdb_name)
+		return nil
+	}
 
-    for _, us := range sessions {
-        kill := fmt.Sprintf("ALTER SYSTEM KILL SESSION '%d,%d' IMMEDIATE", us.sid, us.serial)
-        // RAC note: to target a specific instance use 'sid,serial#,@inst_id'
-        if _, err := db.ExecContext(ctx, kill); err != nil {
-            log.Printf("⚠️ Failed to kill session sid=%d serial=%d (inst=%d): %v",
-                us.sid, us.serial, us.inst_id, err)
-        }
-    }
-    return nil
+	for _, us := range sessions {
+		kill := fmt.Sprintf("ALTER SYSTEM KILL SESSION '%d,%d' IMMEDIATE", us.sid, us.serial)
+		// RAC note: to target a specific instance use 'sid,serial#,@inst_id'
+		if _, err := db.ExecContext(ctx, kill); err != nil {
+			log.Printf("⚠️ Failed to kill session sid=%d serial=%d (inst=%d): %v",
+				us.sid, us.serial, us.inst_id, err)
+		}
+	}
+	return nil
 }
-
 
 // Kill_user_sessions_in_pdb_until_gone keeps killing USER sessions in the PDB until none remain
 // or until max_attempts (default: 100) is reached. It rechecks with Get_user_sessions between attempts.
 // wait_between_attempts controls the sleep duration between attempts.
 func Kill_user_sessions_in_pdb_until_gone(
-    ctx context.Context,
-    db *sql.DB,
-    pdb_name string,
-    max_attempts int,
-    wait_between_attempts time.Duration,
+	ctx context.Context,
+	db *sql.DB,
+	pdb_name string,
+	max_attempts int,
+	wait_between_attempts time.Duration,
 ) error {
 
-    if max_attempts <= 0 {
-        max_attempts = 100
-    }
-    if wait_between_attempts <= 0 {
-        wait_between_attempts = 300 * time.Millisecond
-    }
+	if max_attempts <= 0 {
+		max_attempts = 100
+	}
+	if wait_between_attempts <= 0 {
+		wait_between_attempts = 300 * time.Millisecond
+	}
 
-    for attempt := 1; attempt <= max_attempts; attempt++ {
-        sessions, err := Get_user_sessions(ctx, db, pdb_name)
-        if err != nil {
-            return fmt.Errorf("attempt %d: querying user sessions for %s: %w", attempt, pdb_name, err)
-        }
+	for attempt := 1; attempt <= max_attempts; attempt++ {
+		sessions, err := Get_user_sessions(ctx, db, pdb_name)
+		if err != nil {
+			return fmt.Errorf("attempt %d: querying user sessions for %s: %w", attempt, pdb_name, err)
+		}
 
-        if len(sessions) == 0 {
-            log.Printf("✓ No USER sessions remain in %s (after %d attempt(s)).", pdb_name, attempt-1)
-            return nil
-        }
+		if len(sessions) == 0 {
+			log.Printf("✓ No USER sessions remain in %s (after %d attempt(s)).", pdb_name, attempt-1)
+			return nil
+		}
 
-        log.Printf("🔎 Attempt %d/%d: %d USER session(s) found in %s. Killing...",
-            attempt, max_attempts, len(sessions), pdb_name)
+		log.Printf("🔎 Attempt %d/%d: %d USER session(s) found in %s. Killing...",
+			attempt, max_attempts, len(sessions), pdb_name)
 
-        // Kill all visible sessions this round
-        for _, us := range sessions {
-            kill := fmt.Sprintf("ALTER SYSTEM KILL SESSION '%d,%d' IMMEDIATE", us.sid, us.serial)
-            if _, err := db.ExecContext(ctx, kill); err != nil {
-                log.Printf("⚠️ Failed to kill session sid=%d serial=%d (inst=%d): %v",
-                    us.sid, us.serial, us.inst_id, err)
-            }
-        }
+		// Kill all visible sessions this round
+		for _, us := range sessions {
+			kill := fmt.Sprintf("ALTER SYSTEM KILL SESSION '%d,%d' IMMEDIATE", us.sid, us.serial)
+			if _, err := db.ExecContext(ctx, kill); err != nil {
+				log.Printf("⚠️ Failed to kill session sid=%d serial=%d (inst=%d): %v",
+					us.sid, us.serial, us.inst_id, err)
+			}
+		}
 
-        // Short pause before re-checking
-        time.Sleep(wait_between_attempts)
-    }
+		// Short pause before re-checking
+		time.Sleep(wait_between_attempts)
+	}
 
-    // Final check and error
-    remaining, err := Get_user_sessions(ctx, db, pdb_name)
-    if err != nil {
-        return fmt.Errorf("final check: querying user sessions for %s: %w", pdb_name, err)
-    }
-    if len(remaining) == 0 {
-        log.Printf("✓ No USER sessions remain in %s (after %d attempts).", pdb_name, max_attempts)
-        return nil
-    }
-    return fmt.Errorf("after %d attempts, %d USER session(s) still remain in %s",
-        max_attempts, len(remaining), pdb_name)
+	// Final check and error
+	remaining, err := Get_user_sessions(ctx, db, pdb_name)
+	if err != nil {
+		return fmt.Errorf("final check: querying user sessions for %s: %w", pdb_name, err)
+	}
+	if len(remaining) == 0 {
+		log.Printf("✓ No USER sessions remain in %s (after %d attempts).", pdb_name, max_attempts)
+		return nil
+	}
+	return fmt.Errorf("after %d attempts, %d USER session(s) still remain in %s",
+		max_attempts, len(remaining), pdb_name)
 }
-
 
 // -------------------------------
 // Utility

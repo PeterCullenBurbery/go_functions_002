@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PeterCullenBurbery/go_functions_002/v5/system_management_functions"
+	"github.com/PeterCullenBurbery/go_functions_002/v6/system_management_functions"
 )
 
 // Format_now returns the current time formatted as "2006-01-02 15:04:05"
